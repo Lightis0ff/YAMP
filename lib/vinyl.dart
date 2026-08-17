@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class VinylDisc extends StatefulWidget {
   const VinylDisc({
@@ -15,7 +16,7 @@ class VinylDisc extends StatefulWidget {
   final bool isPlaying;
 
   /// Fired on every drag frame: rotation delta (radians) and a smoothed
-  /// angular velocity (radians/sec) you can use for seeking.
+  /// angular velocity (radians/sec) used for seeking
   final void Function(double deltaAngle, double angularVelocity) onScrub;
   final VoidCallback onScrubStart;
   final VoidCallback onScrubEnd;
@@ -32,12 +33,12 @@ class _VinylDiscState extends State<VinylDisc>
 
   bool _dragging = false;
   double _lastAngle = 0;
-  double _angularVelocity = 0; // rad/s, exponentially smoothed
+  double _angularVelocity = 0; // rad/s
   DateTime _lastSampleTime = DateTime.now();
 
   static const double _spinVelocity = 1.2; // rad/s
   // static const double _dragCoefficient = 0.03; // closer to 0 = stops faster
-  static const double _easeDecay = 0.015; // shared by every transition now
+  static const double _easeDecay = 0.015;
 
   @override
   void initState() {
@@ -73,17 +74,16 @@ class _VinylDiscState extends State<VinylDisc>
 
   void _onPanStart(DragStartDetails d, Offset center) {
     _dragging = true;
-    _rotation.stop(); // cancel whatever's currently animating
+    _rotation.stop();
     widget.onScrubStart();
     _lastAngle = _angleAt(d.localPosition, center);
     _lastSampleTime = DateTime.now();
+    _angularVelocity = 0;
   }
 
   void _onPanUpdate(DragUpdateDetails d, Offset center) {
     final angle = _angleAt(d.localPosition, center);
     var delta = angle - _lastAngle;
-    // atan2 wraps at +-pi; unwrap so crossing that seam doesn't
-    // register as a near-full-turn jump
     if (delta > math.pi) delta -= 2 * math.pi;
     if (delta < -math.pi) delta += 2 * math.pi;
 
@@ -129,25 +129,34 @@ class _VinylDiscState extends State<VinylDisc>
               onPanUpdate: (d) => _onPanUpdate(d, center),
               onPanEnd: _onPanEnd,
               child: Stack(
-                alignment: .center,
                 children: [
-                  Container(
-                    width: 173,
-                    height: 173,
-                    color: widget.coverColor ?? Color(0xFF616161),
-                  ),
                   AnimatedBuilder(
                     animation: _rotation,
                     builder: (context, child) =>
                         Transform.rotate(angle: _rotation.value, child: child),
-                    child: Image.asset('lib/assets/images/base.png'),
+                    child: Stack(
+                      alignment: .center,
+                      children: [
+                        Image.asset('lib/assets/images/plate.png'),
+                        Stack(
+                              alignment: .center,
+                              children: [
+                                Container(
+                                  width: 113,
+                                  height: 113,
+                                  color: widget.coverColor ?? Color(0xFF616161),
+                                ),
+                                Image.asset('lib/assets/images/base.png'),
+                              ],
+                            )
+                            .animate(target: widget.coverColor != null ? 1 : 0)
+                            .fade()
+                            .scaleXY(begin: 1.1),
+                      ],
+                    ),
                   ),
-                  // Image.asset('lib/assets/images/glare.png')
-                  //     .animate(
-                  //       onPlay: (controller) =>
-                  //           controller.repeat(reverse: true),
-                  //     )
-                  //     .rotate(end: 0.01, duration: Duration(milliseconds: 200)),
+                  if (widget.coverColor == null)
+                    Image.asset('lib/assets/images/plateGlare.png'),
                 ],
               ),
             ),
@@ -164,8 +173,8 @@ class _EaseToVelocity extends Simulation {
 
   final double _x0;
   final double _v0;
-  final double _target; // velocity being eased toward
-  final double _decay; // 0 < decay < 1 -- closer to 0 converges faster
+  final double _target;
+  final double _decay;
   final double _log;
 
   @override
