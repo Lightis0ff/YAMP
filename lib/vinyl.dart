@@ -9,6 +9,7 @@ class VinylDisc extends StatefulWidget {
     required this.onScrub,
     required this.onScrubStart,
     required this.onScrubEnd,
+    this.coverColor,
   });
 
   final bool isPlaying;
@@ -18,6 +19,8 @@ class VinylDisc extends StatefulWidget {
   final void Function(double deltaAngle, double angularVelocity) onScrub;
   final VoidCallback onScrubStart;
   final VoidCallback onScrubEnd;
+
+  final Color? coverColor;
 
   @override
   State<VinylDisc> createState() => _VinylDiscState();
@@ -33,7 +36,7 @@ class _VinylDiscState extends State<VinylDisc>
   DateTime _lastSampleTime = DateTime.now();
 
   static const double _spinVelocity = 1.2; // rad/s
-  static const double _dragCoefficient = 0.03; // closer to 0 = stops faster
+  // static const double _dragCoefficient = 0.03; // closer to 0 = stops faster
   static const double _easeDecay = 0.015; // shared by every transition now
 
   @override
@@ -128,6 +131,11 @@ class _VinylDiscState extends State<VinylDisc>
               child: Stack(
                 alignment: .center,
                 children: [
+                  Container(
+                    width: 173,
+                    height: 173,
+                    color: widget.coverColor ?? Color(0xFF616161),
+                  ),
                   AnimatedBuilder(
                     animation: _rotation,
                     builder: (context, child) =>

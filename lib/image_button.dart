@@ -7,7 +7,7 @@ class ImageButton extends StatefulWidget {
     required this.onPressed,
     required this.buttonName,
     this.isSelected,
-    this.scale,
+    this.scale = 6,
     this.tooltip,
     this.borderRadius,
   });
@@ -16,7 +16,7 @@ class ImageButton extends StatefulWidget {
   final String buttonName;
   final bool? isSelected;
   // final String? selectedAssetName;
-  final double? scale;
+  final double scale;
   final String? tooltip;
   final double? borderRadius;
 
@@ -34,13 +34,13 @@ class _ImageButtonState extends State<ImageButton> {
           padding: .zero,
           icon: Image.asset(
             'lib/assets/images/buttons/${widget.buttonName}Button.png',
-            scale: 6,
+            scale: widget.scale,
           ),
           isSelected: widget.isSelected,
           selectedIcon: widget.isSelected != null
               ? Image.asset(
                   'lib/assets/images/buttons/${widget.buttonName}ButtonPressed.png',
-                  scale: 6,
+                  scale: widget.scale,
                 )
               : null,
           tooltip: widget.tooltip,

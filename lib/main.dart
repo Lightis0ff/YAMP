@@ -8,7 +8,7 @@ void main() async {
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  const windowOptions = WindowOptions(size: Size(400, 500));
+  const windowOptions = WindowOptions(size: Size(400, 490));
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
