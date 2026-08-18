@@ -316,7 +316,10 @@ class _HomePageState extends State<HomePage> {
                               alignment: .center,
                               children: [
                                 Container(
-                                  color: coverColors[0],
+                                  decoration: BoxDecoration(
+                                    color: coverColors[0],
+                                    shape: .circle,
+                                  ),
                                   width: 50,
                                   height: 50,
                                 ),

@@ -153,7 +153,11 @@ class _VinylDiscState extends State<VinylDisc>
                                 Container(
                                   width: 113,
                                   height: 113,
-                                  color: widget.coverColor ?? Color(0xFF616161),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        widget.coverColor ?? Color(0xFF616161),
+                                    shape: .circle,
+                                  ),
                                 ),
                                 Image.asset('lib/assets/images/base.png'),
                               ],
