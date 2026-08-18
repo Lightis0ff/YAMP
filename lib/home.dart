@@ -28,7 +28,9 @@ class TopMessage {
 }
 
 class HomePage extends StatefulWidget {
-  const new({super.key});
+  const new({super.key, required this.openFilePath});
+
+  final String? openFilePath;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -68,6 +70,14 @@ class _HomePageState extends State<HomePage> {
     setState(() => topMessage = message);
     await Future.delayed(message.duration);
     setState(() => topMessage = null);
+  }
+
+  @override
+  void initState() {
+    if (widget.openFilePath != null && widget.openFilePath!.isNotEmpty) {
+      setSong(widget.openFilePath!);
+    }
+    super.initState();
   }
 
   void _handleScrub(double deltaAngle, double angularVelocity) {

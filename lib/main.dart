@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:yamp/home.dart';
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
@@ -16,17 +18,23 @@ void main() async {
   await windowManager.setResizable(false);
   await windowManager.setMaximizable(false);
 
-  runApp(MyApp());
+  String? openFilePath = Platform.isWindows && args.isNotEmpty
+      ? args.first
+      : null;
+
+  runApp(MyApp(openFilePath: openFilePath));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.openFilePath});
+
+  final String? openFilePath;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(colorScheme: .dark(primary: Colors.white)),
-      home: HomePage(),
+      home: HomePage(openFilePath: openFilePath),
       debugShowCheckedModeBanner: false,
     );
   }
