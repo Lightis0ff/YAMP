@@ -58,6 +58,8 @@ class _VinylDiscState extends State<VinylDisc>
       _easeTo(0.0);
     } else if (widget.isPlaying && widget.rate != old.rate) {
       _easeTo(_spinVelocity);
+    } else if (!widget.isPlaying && widget.rate != old.rate) {
+      _easeTo(0.0);
     }
   }
 

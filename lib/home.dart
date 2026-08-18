@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   Duration _scrubAccumulator = Duration.zero;
   Timer? _scrubTimer;
   bool _wasPlayingBeforeScrub = false;
+  bool? _wasPlayingBeforeFForward;
 
   void pickSong() async {
     final pickedFile = await FilePicker.pickFile(type: .audio);
@@ -362,25 +363,28 @@ class _HomePageState extends State<HomePage> {
           buttonName: 'play',
           isSelected: isPlaying,
         ),
+        HoldImageButton(
+          buttonName: 'fastForward',
+          onHold: () {
+            _wasPlayingBeforeFForward ??= isPlaying;
+            if (!isPlaying) player.play();
+            player.setRate(2.5);
+            player.setPitch(1.4);
+          },
+          onCancel: () {
+            if (_wasPlayingBeforeFForward == false) player.pause();
+            player.setRate(1);
+            player.setPitch(1);
+            _wasPlayingBeforeFForward = null;
+          },
+          onPressed: () {},
+        ),
         ImageButton(
           onPressed: isPlaying ? () => player.pause() : null,
           buttonName: 'pause',
           isSelected: !isPlaying,
         ),
         ImageButton(onPressed: () => player.stop(), buttonName: 'stop'),
-        HoldImageButton(
-          buttonName: 'fastForward',
-          onHold: () {
-            player.setRate(2.5);
-            player.setPitch(1.4);
-          },
-          onCancel: () {
-            player.setRate(1);
-            player.setPitch(1);
-          },
-          onPressed: () {},
-          borderRadius: 12,
-        ),
         Spacer(),
         StreamBuilder(
           stream: player.stream.position,
