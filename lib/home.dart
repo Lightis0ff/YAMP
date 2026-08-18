@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:audio_metadata_reader/src/parsers/tags/tag_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:path/path.dart' as p;
 import 'package:file_picker/file_picker.dart';
 import 'package:text_scroll/text_scroll.dart';
@@ -13,6 +14,18 @@ import 'package:yamp/utils.dart';
 import 'package:yamp/vinyl.dart';
 
 import 'image_button.dart';
+
+class TopMessage {
+  const new(
+    this.text, {
+    this.duration = const Duration(seconds: 3),
+    this.color,
+  });
+
+  final String text;
+  final Duration duration;
+  final Color? color;
+}
 
 class HomePage extends StatefulWidget {
   const new({super.key});
@@ -28,12 +41,33 @@ class _HomePageState extends State<HomePage> {
   bool _wasPlayingBeforeScrub = false;
   bool? _wasPlayingBeforeFForward;
 
-  void pickSong() async {
+  bool _dragAndDrop = false;
+  Offset _dropPosition = Offset.zero;
+  TopMessage? topMessage;
+
+  void pickFile() async {
     final pickedFile = await FilePicker.pickFile(type: .audio);
     if (pickedFile == null || pickedFile.path == null) return;
 
-    final file = File(pickedFile.path!);
+    setSong(pickedFile.path!);
+  }
+
+  void setSong(String path) {
+    final file = File(path);
+    if (!supportedFileExtensions.contains(p.extension(path))) {
+      showTopMessage(
+        TopMessage('Unsupported file type', color: Color(0xFFD40000)),
+      );
+      return;
+    }
+
     player.open(Media(file.path));
+  }
+
+  Future<void> showTopMessage(TopMessage message) async {
+    setState(() => topMessage = message);
+    await Future.delayed(message.duration);
+    setState(() => topMessage = null);
   }
 
   void _handleScrub(double deltaAngle, double angularVelocity) {
@@ -111,120 +145,198 @@ class _HomePageState extends State<HomePage> {
           //     ),
           //   ),
           //   child:
-          StreamBuilder(
-            stream: player.stream.playing,
-            initialData: player.state.playing,
-            builder: (context, playingSnap) {
-              final isPlaying = playingSnap.data ?? false;
-              return StreamBuilder(
-                stream: player.stream.playlist,
-                builder: (context, playlistSnap) {
-                  final playlist = playlistSnap.data;
-                  final currentMetadata = getCurrentMetadata(
-                    playlist ?? Playlist([]),
-                  );
-                  final meta = currentMetadata?.meta;
-                  final path = currentMetadata?.path;
-                  final title = path != null
-                      ? meta?.title ?? p.basename(path)
-                      : null;
-                  final coverPicture =
-                      meta?.pictures != null && meta!.pictures.isNotEmpty
-                      ? meta.pictures[0]
-                      : null;
-                  return Padding(
-                    padding: .all(5),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: .min,
-                        spacing: 10,
-                        children: [
-                          _titleAndProgressbar(title, meta),
-                          RepaintBoundary(
-                            child:
-                                // Stack(
-                                //   alignment: .center,
-                                //   children: [
-                                //     StreamBuilder(
-                                //       stream: player.stream.position,
-                                //       initialData: Duration.zero,
-                                //       builder: (context, posSnap) {
-                                //         final position = posSnap.data ?? Duration.zero;
-                                //         final duration = player.state.duration;
-                                //         return CircularProgressIndicator(
-                                //           value:
-                                //               position.inMilliseconds /
-                                //               (duration.inMilliseconds != 0
-                                //                   ? duration.inMilliseconds
-                                //                   : 1),
-                                //           constraints: BoxConstraints(
-                                //             minWidth: 335,
-                                //             minHeight: 335,
-                                //           ),
-                                //           color: Colors.amber,
-                                //         );
-                                //       },
-                                //     ),
-                                Stack(
-                                  alignment: .bottomRight,
-                                  children: [
-                                    StreamBuilder(
-                                      stream: player.stream.rate,
-                                      initialData: 1.0,
-                                      builder: (context, rateSnap) {
-                                        final rate = rateSnap.data ?? 1.0;
-                                        return Padding(
-                                          padding: .symmetric(horizontal: 20),
-                                          child: AspectRatio(
-                                            aspectRatio: 1,
-                                            child: VinylDisc(
-                                              isPlaying: isPlaying,
-                                              onScrub: _handleScrub,
-                                              onScrubStart: _handleScrubStart,
-                                              onScrubEnd: _handleScrubEnd,
-                                              coverColor: title != null
-                                                  ? coverColors[stringToRange(
-                                                      title
-                                                          .trim()
-                                                          .toLowerCase(),
-                                                      0,
-                                                      coverColors.length - 1,
-                                                    )]
-                                                  : null,
-                                              rate: rate,
-                                              // coverPicture: coverPicture,
-                                            ),
-                                          ),
-                                        );
-                                      },
+          Stack(
+            children: [
+              StreamBuilder(
+                stream: player.stream.playing,
+                initialData: player.state.playing,
+                builder: (context, playingSnap) {
+                  final isPlaying = playingSnap.data ?? false;
+                  return StreamBuilder(
+                    stream: player.stream.playlist,
+                    builder: (context, playlistSnap) {
+                      final playlist = playlistSnap.data;
+                      final currentMetadata = getCurrentMetadata(
+                        playlist ?? Playlist([]),
+                      );
+                      final meta = currentMetadata?.meta;
+                      final path = currentMetadata?.path;
+                      final title = path != null
+                          ? meta?.title ?? p.basename(path)
+                          : null;
+                      final coverPicture =
+                          meta?.pictures != null && meta!.pictures.isNotEmpty
+                          ? meta.pictures[0]
+                          : null;
+                      return Padding(
+                        padding: .all(5),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: .min,
+                            spacing: 10,
+                            children: [
+                              _titleAndProgressbar(title, meta),
+                              RepaintBoundary(
+                                child:
+                                    // Stack(
+                                    //   alignment: .center,
+                                    //   children: [
+                                    //     StreamBuilder(
+                                    //       stream: player.stream.position,
+                                    //       initialData: Duration.zero,
+                                    //       builder: (context, posSnap) {
+                                    //         final position = posSnap.data ?? Duration.zero;
+                                    //         final duration = player.state.duration;
+                                    //         return CircularProgressIndicator(
+                                    //           value:
+                                    //               position.inMilliseconds /
+                                    //               (duration.inMilliseconds != 0
+                                    //                   ? duration.inMilliseconds
+                                    //                   : 1),
+                                    //           constraints: BoxConstraints(
+                                    //             minWidth: 335,
+                                    //             minHeight: 335,
+                                    //           ),
+                                    //           color: Colors.amber,
+                                    //         );
+                                    //       },
+                                    //     ),
+                                    Stack(
+                                      alignment: .bottomRight,
+                                      children: [
+                                        StreamBuilder(
+                                          stream: player.stream.rate,
+                                          initialData: 1.0,
+                                          builder: (context, rateSnap) {
+                                            final rate = rateSnap.data ?? 1.0;
+                                            return Padding(
+                                              padding: .symmetric(
+                                                horizontal: 20,
+                                              ),
+                                              child: AspectRatio(
+                                                aspectRatio: 1,
+                                                child: VinylDisc(
+                                                  isPlaying: isPlaying,
+                                                  onScrub: _handleScrub,
+                                                  onScrubStart:
+                                                      _handleScrubStart,
+                                                  onScrubEnd: _handleScrubEnd,
+                                                  coverColor: title != null
+                                                      ? coverColors[stringToRange(
+                                                          title
+                                                              .trim()
+                                                              .toLowerCase(),
+                                                          0,
+                                                          coverColors.length -
+                                                              1,
+                                                        )]
+                                                      : null,
+                                                  rate: rate,
+                                                  // coverPicture: coverPicture,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        // Positioned(
+                                        //   right: 0,
+                                        //   top: 0,
+                                        //   child: _playhead(isPlaying),
+                                        // ),
+                                        StreamBuilder(
+                                          stream: player.stream.volume,
+                                          initialData: 100.0,
+                                          builder: (context, volumeSnap) {
+                                            final volume =
+                                                volumeSnap.data ?? 100.0;
+                                            return _volumeControls(
+                                              volume.toInt(),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                    // Positioned(
-                                    //   right: 0,
-                                    //   top: 0,
-                                    //   child: _playhead(isPlaying),
-                                    // ),
-                                    StreamBuilder(
-                                      stream: player.stream.volume,
-                                      initialData: 100.0,
-                                      builder: (context, volumeSnap) {
-                                        final volume = volumeSnap.data ?? 100.0;
-                                        return _volumeControls(volume.toInt());
-                                      },
-                                    ),
-                                  ],
-                                ),
-                            //   ],
-                            // ),
+                                //   ],
+                                // ),
+                              ),
+                              _bottomRow(isPlaying),
+                            ],
                           ),
-                          _bottomRow(isPlaying),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              dragAndDrop(),
+            ],
+          ),
+    );
+  }
+
+  Widget dragAndDrop() {
+    return DropTarget(
+      onDragEntered: (details) => setState(() => _dragAndDrop = true),
+      onDragExited: (details) => setState(() => _dragAndDrop = false),
+      onDragUpdated: (details) =>
+          setState(() => _dropPosition = details.localPosition),
+      onDragDone: (details) => setSong(details.files[0].path),
+      child: IgnorePointer(
+        // child:
+        //     DottedBorder(
+        //           options: RoundedRectDottedBorderOptions(
+        //             radius: .circular(5),
+        //             color: Colors.blue,
+        //             strokeWidth: 5,
+        //             borderPadding: .all(8),
+        //             dashPattern: [15],
+        //           ),
+        child:
+            Stack(
+                  children: [
+                    Positioned(
+                      // TODO: Make the image centered automatically
+                      // instead of fixed offset
+                      left: _dropPosition.dx - 73,
+                      top: _dropPosition.dy - 73,
+                      child: Column(
+                        children: [
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black38,
+                                  offset: Offset(0, 5),
+                                  blurRadius: 7,
+                                ),
+                              ],
+                              shape: .circle,
+                            ),
+                            child: Stack(
+                              alignment: .center,
+                              children: [
+                                Container(
+                                  color: coverColors[0],
+                                  width: 50,
+                                  height: 50,
+                                ),
+                                Image.asset(
+                                  'lib/assets/images/base.png',
+                                  scale: 7,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text('Drop to open file', textAlign: .center),
                         ],
                       ),
                     ),
-                  );
-                },
-              );
-            },
-          ),
+                  ],
+                )
+                // )
+                .animate(target: _dragAndDrop ? 1 : 0)
+                .fade(duration: Duration(milliseconds: 170)),
+      ),
     );
   }
 
@@ -242,10 +354,11 @@ class _HomePageState extends State<HomePage> {
               spacing: 3,
               children: [
                 TextScroll(
-                  '${title ?? 'No file selected'}${meta?.artist != null ? ' - ${meta!.artist}' : ''}',
+                  topMessage?.text ??
+                      '${title ?? 'No file selected'}${meta?.artist != null ? ' - ${meta!.artist}' : ''}',
                   style: TextStyle(
                     fontFamily: 'Pixel 12x10',
-                    color: Color(0xFFEEEEEE),
+                    color: topMessage?.color ?? Color(0xFFEEEEEE),
                   ),
                   textAlign: .center,
                   velocity: Velocity(pixelsPerSecond: Offset(30, 0)),
@@ -416,7 +529,7 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(width: 3),
         ImageButton(
-          onPressed: pickSong,
+          onPressed: pickFile,
           buttonName: 'folder',
           borderRadius: 12,
         ),
