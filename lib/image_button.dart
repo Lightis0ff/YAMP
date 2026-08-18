@@ -76,6 +76,7 @@ class HoldImageButton extends StatefulWidget {
     super.key,
     required this.buttonName,
     required this.onHold,
+    this.onPressed,
     this.onCancel,
     this.scale = 6,
     this.tooltip,
@@ -86,6 +87,7 @@ class HoldImageButton extends StatefulWidget {
   final String buttonName;
   final void Function() onHold;
   final void Function()? onCancel;
+  final void Function()? onPressed;
   final double scale;
   final String? tooltip;
   final double? borderRadius;
@@ -113,10 +115,12 @@ class _HoldImageButtonState extends State<HoldImageButton> {
       holdTimeout: Duration(milliseconds: 25),
       child:
           IconButton(
-                onPressed: () {
-                  widget.onHold();
-                  setState(() => isHolding = false);
-                },
+                onPressed:
+                    widget.onPressed ??
+                    () {
+                      widget.onHold();
+                      setState(() => isHolding = false);
+                    },
                 padding: .zero,
                 icon: Image.asset(
                   'lib/assets/images/buttons/${widget.buttonName}Button.png',

@@ -11,6 +11,7 @@ class VinylDisc extends StatefulWidget {
     required this.onScrubStart,
     required this.onScrubEnd,
     this.coverColor,
+    this.rate = 1.0,
   });
 
   final bool isPlaying;
@@ -22,6 +23,7 @@ class VinylDisc extends StatefulWidget {
   final VoidCallback onScrubEnd;
 
   final Color? coverColor;
+  final double rate;
 
   @override
   State<VinylDisc> createState() => _VinylDiscState();
@@ -36,7 +38,7 @@ class _VinylDiscState extends State<VinylDisc>
   double _angularVelocity = 0; // rad/s
   DateTime _lastSampleTime = DateTime.now();
 
-  static const double _spinVelocity = 1.2; // rad/s
+  double get _spinVelocity => 1.2 * widget.rate; // rad/s
   // static const double _dragCoefficient = 0.03; // closer to 0 = stops faster
   static const double _easeDecay = 0.015;
 
@@ -50,8 +52,13 @@ class _VinylDiscState extends State<VinylDisc>
   void didUpdateWidget(covariant VinylDisc old) {
     super.didUpdateWidget(old);
     if (_dragging) return;
-    if (widget.isPlaying && !old.isPlaying) _easeTo(_spinVelocity);
-    if (!widget.isPlaying && old.isPlaying) _easeTo(0.0);
+    if (widget.isPlaying && !old.isPlaying) {
+      _easeTo(_spinVelocity);
+    } else if (!widget.isPlaying && old.isPlaying) {
+      _easeTo(0.0);
+    } else if (widget.isPlaying && widget.rate != old.rate) {
+      _easeTo(_spinVelocity);
+    }
   }
 
   void _easeTo(double targetVelocity, {double? fromVelocity}) {

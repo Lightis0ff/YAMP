@@ -167,25 +167,35 @@ class _HomePageState extends State<HomePage> {
                                 Stack(
                                   alignment: .bottomRight,
                                   children: [
-                                    Padding(
-                                      padding: .symmetric(horizontal: 20),
-                                      child: AspectRatio(
-                                        aspectRatio: 1,
-                                        child: VinylDisc(
-                                          isPlaying: isPlaying,
-                                          onScrub: _handleScrub,
-                                          onScrubStart: _handleScrubStart,
-                                          onScrubEnd: _handleScrubEnd,
-                                          coverColor: title != null
-                                              ? coverColors[stringToRange(
-                                                  title.trim().toLowerCase(),
-                                                  0,
-                                                  coverColors.length - 1,
-                                                )]
-                                              : null,
-                                          // coverPicture: coverPicture,
-                                        ),
-                                      ),
+                                    StreamBuilder(
+                                      stream: player.stream.rate,
+                                      initialData: 1.0,
+                                      builder: (context, rateSnap) {
+                                        final rate = rateSnap.data ?? 1.0;
+                                        return Padding(
+                                          padding: .symmetric(horizontal: 20),
+                                          child: AspectRatio(
+                                            aspectRatio: 1,
+                                            child: VinylDisc(
+                                              isPlaying: isPlaying,
+                                              onScrub: _handleScrub,
+                                              onScrubStart: _handleScrubStart,
+                                              onScrubEnd: _handleScrubEnd,
+                                              coverColor: title != null
+                                                  ? coverColors[stringToRange(
+                                                      title
+                                                          .trim()
+                                                          .toLowerCase(),
+                                                      0,
+                                                      coverColors.length - 1,
+                                                    )]
+                                                  : null,
+                                              rate: rate,
+                                              // coverPicture: coverPicture,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     // Positioned(
                                     //   right: 0,
@@ -298,19 +308,13 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Column(
+      crossAxisAlignment: .end,
       children: [
-        Row(
-          mainAxisAlignment: .end,
-          mainAxisSize: .min,
-          children: [
-            SizedBox(width: 40),
-            HoldImageButton(
-              buttonName: 'volumeUp',
-              onHold: () => setVolume(volume + 2),
-              scale: 7,
-              padding: false,
-            ),
-          ],
+        HoldImageButton(
+          buttonName: 'volumeUp',
+          onHold: () => setVolume(volume + 2),
+          scale: 7,
+          padding: false,
         ),
         Row(
           mainAxisSize: .min,
@@ -321,23 +325,25 @@ class _HomePageState extends State<HomePage> {
               scale: 7,
               padding: false,
             ),
-            Container(
-              width: 40,
-              padding: .only(left: 2),
+            RepaintBoundary(
               child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: .circular(4),
-                ),
-                padding: .fromLTRB(0, 2, 4, 2),
-                child: Text(
-                  volume.toString(),
-                  style: TextStyle(
-                    fontFamily: 'Seven Segment',
-                    color: Color(0xFFE0E0E0),
+                width: 40,
+                padding: .only(left: 2),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: .circular(4),
                   ),
-                  textAlign: .end,
-                  maxLines: 1,
+                  padding: .fromLTRB(0, 2, 4, 2),
+                  child: Text(
+                    volume.toString(),
+                    style: TextStyle(
+                      fontFamily: 'Seven Segment',
+                      color: Color(0xFFE0E0E0),
+                    ),
+                    textAlign: .end,
+                    maxLines: 1,
+                  ),
                 ),
               ),
             ),
@@ -362,6 +368,19 @@ class _HomePageState extends State<HomePage> {
           isSelected: !isPlaying,
         ),
         ImageButton(onPressed: () => player.stop(), buttonName: 'stop'),
+        HoldImageButton(
+          buttonName: 'fastForward',
+          onHold: () {
+            player.setRate(2.5);
+            player.setPitch(1.4);
+          },
+          onCancel: () {
+            player.setRate(1);
+            player.setPitch(1);
+          },
+          onPressed: () {},
+          borderRadius: 12,
+        ),
         Spacer(),
         StreamBuilder(
           stream: player.stream.position,
