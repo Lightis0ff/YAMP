@@ -16,16 +16,25 @@ import 'package:yamp/vinyl.dart';
 
 import 'image_button.dart';
 
+enum TopMessageType {
+  normal(Color(0xFFEEEEEE)),
+  success(Color(0xFF00FF00)),
+  error(Color(0xFFD40000));
+
+  const TopMessageType(this.color);
+  final Color color;
+}
+
 class TopMessage {
   const new(
     this.text, {
     this.duration = const Duration(seconds: 3),
-    this.color,
+    this.type = .normal,
   });
 
   final String text;
   final Duration duration;
-  final Color? color;
+  final TopMessageType type;
 }
 
 class HomePage extends StatefulWidget {
@@ -48,6 +57,7 @@ class _HomePageState extends State<HomePage> {
   bool _dragAndDrop = false;
   Offset _dropPosition = Offset.zero;
   TopMessage? _topMessage;
+  Timer? _topMessageTimer;
 
   void _pickFile() async {
     final pickedFile = await FilePicker.pickFile(type: .audio);
@@ -57,21 +67,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setSong(String path) {
-    final file = File(path);
-    if (!supportedFileExtensions.contains(p.extension(path))) {
-      _showTopMessage(
-        TopMessage('Unsupported file type', color: Color(0xFFD40000)),
-      );
+    try {
+      final file = File(path);
+      if (!supportedFileExtensions.contains(p.extension(path))) {
+        _showTopMessage(TopMessage('Unsupported file type', type: .error));
+        return;
+      }
+      player.open(Media(file.path));
+    } catch (e) {
+      _showTopMessage(TopMessage('Error', type: .error));
       return;
     }
-
-    player.open(Media(file.path));
   }
 
   Future<void> _showTopMessage(TopMessage message) async {
     setState(() => _topMessage = message);
-    await Future.delayed(message.duration);
-    setState(() => _topMessage = null);
+    // Timer(message.duration, () => setState(() => _topMessage = null));
+    _topMessageTimer?.cancel();
+    _topMessageTimer = Timer(
+      message.duration,
+      () => setState(() => _topMessage = null),
+    );
   }
 
   @override
@@ -213,9 +229,16 @@ class _HomePageState extends State<HomePage> {
                     stream: player.stream.playlist,
                     builder: (context, playlistSnap) {
                       final playlist = playlistSnap.data;
-                      final currentMetadata = getCurrentMetadata(
-                        playlist ?? Playlist([]),
-                      );
+                      CurrentMetadata? currentMetadata;
+                      try {
+                        currentMetadata = getCurrentMetadata(
+                          playlist ?? Playlist([]),
+                        );
+                      } catch (e) {
+                        _showTopMessage(
+                          TopMessage('Error reading metadata', type: .error),
+                        );
+                      }
                       final meta = currentMetadata?.meta;
                       final path = currentMetadata?.path;
                       final title = path != null
@@ -369,7 +392,7 @@ class _HomePageState extends State<HomePage> {
                       '${title ?? 'No file selected'}${meta?.artist != null ? ' - ${meta!.artist}' : ''}',
                   style: TextStyle(
                     fontFamily: 'Pixel 12x10',
-                    color: _topMessage?.color ?? Color(0xFFEEEEEE),
+                    color: _topMessage?.type.color ?? Color(0xFFEEEEEE),
                   ),
                   textAlign: .center,
                   velocity: Velocity(pixelsPerSecond: Offset(30, 0)),
