@@ -437,11 +437,7 @@ class _HomePageState extends State<HomePage> {
           onScrubStart: _handleScrubStart,
           onScrubEnd: _handleScrubEnd,
           coverColor: title != null
-              ? coverColors[stringToRange(
-                  title.trim().toLowerCase(),
-                  0,
-                  coverColors.length - 1,
-                )]
+              ? coverColors[stringToRange(title, 0, coverColors.length - 1)]
               : null,
           rate: rate,
           // coverPicture: coverPicture,

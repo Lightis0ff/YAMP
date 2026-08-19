@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:crypto/crypto.dart';
 
 class CurrentMetadata {
   CurrentMetadata({required this.meta, required this.path});
@@ -34,7 +36,7 @@ String printDuration(Duration duration, {bool milliseconds = false}) {
   return '$negativeSign${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds$threeDigitMilliseconds';
 }
 
-int stringToRange(String text, int min, int max) {
+int stringToRange(String text, int min, int max, {bool format = true}) {
   if (min >= max) {
     throw ArgumentError(
       'The minimum value must be less than the maximum value',
@@ -43,14 +45,19 @@ int stringToRange(String text, int min, int max) {
 
   if (text.isEmpty) return min;
 
-  int hash = 0;
-  for (int i = 0; i < text.length; i++) {
-    hash = (hash * 31) + text.codeUnitAt(i);
-    hash = hash.toUnsigned(32);
-  }
+  final digest = sha1
+      .convert(utf8.encode(format ? text.toLowerCase().trim() : text))
+      .toString()
+      .substring(0, 6);
+  final decimal = int.parse('0x$digest');
 
-  int rangeSize = max - min + 1;
-  return min + (hash % rangeSize);
+  return mapValue(
+    decimal.toDouble(),
+    0,
+    16777215,
+    0,
+    coverColors.length - 1,
+  ).toInt();
 }
 
 const coverColors = [
@@ -69,3 +76,13 @@ const coverColors = [
   Color(0xFF32CD32),
   Color(0xFFDC143C),
 ];
+
+double mapValue(
+  double value,
+  double inMin,
+  double inMax,
+  double outMin,
+  double outMax,
+) {
+  return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
+}
