@@ -30,44 +30,52 @@ class _ImageButtonState extends State<ImageButton> {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-          onPressed: widget.onPressed,
-          padding: .zero,
-          icon: Image.asset(
-            'lib/assets/images/buttons/${widget.buttonName}Button.png',
-            scale: widget.scale,
-          ),
-          isSelected: widget.isSelected,
-          selectedIcon: widget.isSelected != null
-              ? Image.asset(
-                  'lib/assets/images/buttons/${widget.buttonName}ButtonPressed.png',
+    return Focus(
+      descendantsAreFocusable: false,
+      canRequestFocus: false,
+      child:
+          IconButton(
+                onPressed: widget.onPressed,
+                padding: .zero,
+                icon: Image.asset(
+                  'lib/assets/images/buttons/${widget.buttonName}Button.png',
                   scale: widget.scale,
-                )
-              : null,
-          tooltip: widget.tooltip,
-          // mouseCursor: SystemMouseCursors.click,
-          onHover: (value) => setState(() => isHovering = value),
-        )
-        .animate(target: isHovering && widget.isSelected != true ? 1 : 0)
-        .custom(
-          duration: Duration(milliseconds: 100),
-          builder: (context, value, child) {
-            Widget background = Container(
-              color: Color(0xFF5A5A5A).withAlpha((255 * value).toInt()),
-              padding: .all(1.5),
-              child: child,
-            );
-            if (widget.borderRadius != null) {
-              return ClipRRect(
-                borderRadius: .circular(widget.borderRadius!),
-                clipBehavior: .antiAlias,
-                child: background,
-              );
-            } else {
-              return ClipOval(clipBehavior: .antiAlias, child: background);
-            }
-          },
-        );
+                ),
+                isSelected: widget.isSelected,
+                selectedIcon: widget.isSelected != null
+                    ? Image.asset(
+                        'lib/assets/images/buttons/${widget.buttonName}ButtonPressed.png',
+                        scale: widget.scale,
+                      )
+                    : null,
+                tooltip: widget.tooltip,
+                // mouseCursor: SystemMouseCursors.click,
+                onHover: (value) => setState(() => isHovering = value),
+              )
+              .animate(target: isHovering && widget.isSelected != true ? 1 : 0)
+              .custom(
+                duration: Duration(milliseconds: 100),
+                builder: (context, value, child) {
+                  Widget background = Container(
+                    color: Color(0xFF5A5A5A).withAlpha((255 * value).toInt()),
+                    padding: .all(1.5),
+                    child: child,
+                  );
+                  if (widget.borderRadius != null) {
+                    return ClipRRect(
+                      borderRadius: .circular(widget.borderRadius!),
+                      clipBehavior: .antiAlias,
+                      child: background,
+                    );
+                  } else {
+                    return ClipOval(
+                      clipBehavior: .antiAlias,
+                      child: background,
+                    );
+                  }
+                },
+              ),
+    );
   }
 }
 
@@ -113,51 +121,55 @@ class _HoldImageButtonState extends State<HoldImageButton> {
         setState(() => isHolding = false);
       },
       holdTimeout: Duration(milliseconds: 25),
-      child:
-          IconButton(
-                onPressed:
-                    widget.onPressed ??
-                    () {
-                      widget.onHold();
-                      setState(() => isHolding = false);
-                    },
-                padding: .zero,
-                icon: Image.asset(
-                  'lib/assets/images/buttons/${widget.buttonName}Button.png',
-                  scale: widget.scale,
-                ),
-                isSelected: isHolding,
-                selectedIcon: Image.asset(
-                  'lib/assets/images/buttons/${widget.buttonName}ButtonPressed.png',
-                  scale: widget.scale,
-                ),
-                tooltip: widget.tooltip,
-                // mouseCursor: SystemMouseCursors.click,
-                onHover: (value) => setState(() => isHovering = value),
-              )
-              .animate(target: isHovering && !isHolding ? 1 : 0)
-              .custom(
-                duration: Duration(milliseconds: 100),
-                builder: (context, value, child) {
-                  Widget background = Container(
-                    color: Color(0xFF5A5A5A).withAlpha((255 * value).toInt()),
-                    padding: widget.padding ? .all(1.5) : null,
-                    child: child,
-                  );
-                  if (widget.borderRadius != null) {
-                    return ClipRRect(
-                      borderRadius: .circular(widget.borderRadius!),
-                      clipBehavior: .antiAlias,
-                      child: background,
+      child: Focus(
+        descendantsAreFocusable: false,
+        canRequestFocus: false,
+        child:
+            IconButton(
+                  onPressed:
+                      widget.onPressed ??
+                      () {
+                        widget.onHold();
+                        setState(() => isHolding = false);
+                      },
+                  padding: .zero,
+                  icon: Image.asset(
+                    'lib/assets/images/buttons/${widget.buttonName}Button.png',
+                    scale: widget.scale,
+                  ),
+                  isSelected: isHolding,
+                  selectedIcon: Image.asset(
+                    'lib/assets/images/buttons/${widget.buttonName}ButtonPressed.png',
+                    scale: widget.scale,
+                  ),
+                  tooltip: widget.tooltip,
+                  // mouseCursor: SystemMouseCursors.click,
+                  onHover: (value) => setState(() => isHovering = value),
+                )
+                .animate(target: isHovering && !isHolding ? 1 : 0)
+                .custom(
+                  duration: Duration(milliseconds: 100),
+                  builder: (context, value, child) {
+                    Widget background = Container(
+                      color: Color(0xFF5A5A5A).withAlpha((255 * value).toInt()),
+                      padding: widget.padding ? .all(1.5) : null,
+                      child: child,
                     );
-                  } else {
-                    return ClipOval(
-                      clipBehavior: .antiAlias,
-                      child: background,
-                    );
-                  }
-                },
-              ),
+                    if (widget.borderRadius != null) {
+                      return ClipRRect(
+                        borderRadius: .circular(widget.borderRadius!),
+                        clipBehavior: .antiAlias,
+                        child: background,
+                      );
+                    } else {
+                      return ClipOval(
+                        clipBehavior: .antiAlias,
+                        child: background,
+                      );
+                    }
+                  },
+                ),
+      ),
     );
   }
 }

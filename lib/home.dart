@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:media_kit/media_kit.dart';
@@ -43,21 +44,22 @@ class _HomePageState extends State<HomePage> {
   bool _wasPlayingBeforeScrub = false;
   bool? _wasPlayingBeforeFForward;
 
+  bool _isScrubbing = false;
   bool _dragAndDrop = false;
   Offset _dropPosition = Offset.zero;
-  TopMessage? topMessage;
+  TopMessage? _topMessage;
 
-  void pickFile() async {
+  void _pickFile() async {
     final pickedFile = await FilePicker.pickFile(type: .audio);
     if (pickedFile == null || pickedFile.path == null) return;
 
-    setSong(pickedFile.path!);
+    _setSong(pickedFile.path!);
   }
 
-  void setSong(String path) {
+  void _setSong(String path) {
     final file = File(path);
     if (!supportedFileExtensions.contains(p.extension(path))) {
-      showTopMessage(
+      _showTopMessage(
         TopMessage('Unsupported file type', color: Color(0xFFD40000)),
       );
       return;
@@ -66,18 +68,56 @@ class _HomePageState extends State<HomePage> {
     player.open(Media(file.path));
   }
 
-  Future<void> showTopMessage(TopMessage message) async {
-    setState(() => topMessage = message);
+  Future<void> _showTopMessage(TopMessage message) async {
+    setState(() => _topMessage = message);
     await Future.delayed(message.duration);
-    setState(() => topMessage = null);
+    setState(() => _topMessage = null);
   }
 
   @override
   void initState() {
+    ServicesBinding.instance.keyboard.addHandler(_onKeyPress);
     if (widget.openFilePath != null && widget.openFilePath!.isNotEmpty) {
-      setSong(widget.openFilePath!);
+      _setSong(widget.openFilePath!);
     }
     super.initState();
+  }
+
+  bool _onKeyPress(KeyEvent event) {
+    final key = event.logicalKey;
+
+    void seek(int seconds) {
+      _seekClamped(
+        player.state.position + Duration(seconds: seconds),
+        player.state.duration,
+      );
+    }
+
+    if (event is KeyDownEvent) {
+      if (key == .space && !_isScrubbing) {
+        player.playOrPause();
+      } else if (key == .arrowUp) {
+        _setVolume(player.state.volume + 2);
+      } else if (key == .arrowDown) {
+        _setVolume(player.state.volume - 2);
+      } else if (key == .arrowLeft) {
+        seek(-10);
+      } else if (key == .arrowRight) {
+        seek(10);
+      }
+    } else if (event is KeyRepeatEvent) {
+      if (key == .arrowUp) {
+        _setVolume(player.state.volume + 2);
+      } else if (key == .arrowDown) {
+        _setVolume(player.state.volume - 2);
+      } else if (key == .arrowLeft) {
+        seek(-10);
+      } else if (key == .arrowRight) {
+        seek(10);
+      }
+    }
+
+    return false;
   }
 
   void _handleScrub(double deltaAngle, double angularVelocity) {
@@ -93,27 +133,34 @@ class _HomePageState extends State<HomePage> {
     _scrubTimer ??= Timer(const Duration(milliseconds: 40), () {
       final position = player.state.position + _scrubAccumulator;
       final duration = player.state.duration;
-      final clamped = position < Duration.zero
-          ? Duration.zero
-          : (position > duration ? duration : position);
-      player.seek(clamped);
+      _seekClamped(position, duration);
       _scrubAccumulator = Duration.zero;
       _scrubTimer = null;
     });
   }
 
+  void _seekClamped(Duration position, Duration duration) {
+    final clamped = position < Duration.zero
+        ? Duration.zero
+        : (position > duration ? duration : position);
+    player.seek(clamped);
+  }
+
   void _handleScrubStart() {
     _wasPlayingBeforeScrub = player.state.playing;
     player.pause();
+    _isScrubbing = true;
   }
 
   void _handleScrubEnd() {
     if (_wasPlayingBeforeScrub) player.play();
+    _isScrubbing = false;
   }
 
   @override
   void dispose() async {
     await player.dispose();
+    ServicesBinding.instance.keyboard.removeHandler(_onKeyPress);
     super.dispose();
   }
 
@@ -187,85 +234,36 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               _titleAndProgressbar(title, meta),
                               RepaintBoundary(
-                                child:
-                                    // Stack(
-                                    //   alignment: .center,
-                                    //   children: [
-                                    //     StreamBuilder(
-                                    //       stream: player.stream.position,
-                                    //       initialData: Duration.zero,
-                                    //       builder: (context, posSnap) {
-                                    //         final position = posSnap.data ?? Duration.zero;
-                                    //         final duration = player.state.duration;
-                                    //         return CircularProgressIndicator(
-                                    //           value:
-                                    //               position.inMilliseconds /
-                                    //               (duration.inMilliseconds != 0
-                                    //                   ? duration.inMilliseconds
-                                    //                   : 1),
-                                    //           constraints: BoxConstraints(
-                                    //             minWidth: 335,
-                                    //             minHeight: 335,
-                                    //           ),
-                                    //           color: Colors.amber,
-                                    //         );
-                                    //       },
-                                    //     ),
-                                    Stack(
-                                      alignment: .bottomRight,
-                                      children: [
-                                        StreamBuilder(
-                                          stream: player.stream.rate,
-                                          initialData: 1.0,
-                                          builder: (context, rateSnap) {
-                                            final rate = rateSnap.data ?? 1.0;
-                                            return Padding(
-                                              padding: .symmetric(
-                                                horizontal: 20,
-                                              ),
-                                              child: AspectRatio(
-                                                aspectRatio: 1,
-                                                child: VinylDisc(
-                                                  isPlaying: isPlaying,
-                                                  onScrub: _handleScrub,
-                                                  onScrubStart:
-                                                      _handleScrubStart,
-                                                  onScrubEnd: _handleScrubEnd,
-                                                  coverColor: title != null
-                                                      ? coverColors[stringToRange(
-                                                          title
-                                                              .trim()
-                                                              .toLowerCase(),
-                                                          0,
-                                                          coverColors.length -
-                                                              1,
-                                                        )]
-                                                      : null,
-                                                  rate: rate,
-                                                  // coverPicture: coverPicture,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        // Positioned(
-                                        //   right: 0,
-                                        //   top: 0,
-                                        //   child: _playhead(isPlaying),
-                                        // ),
-                                        StreamBuilder(
-                                          stream: player.stream.volume,
-                                          initialData: 100.0,
-                                          builder: (context, volumeSnap) {
-                                            final volume =
-                                                volumeSnap.data ?? 100.0;
-                                            return _volumeControls(
-                                              volume.toInt(),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                child: Stack(
+                                  alignment: .bottomRight,
+                                  children: [
+                                    StreamBuilder(
+                                      stream: player.stream.rate,
+                                      initialData: 1.0,
+                                      builder: (context, rateSnap) {
+                                        final rate = rateSnap.data ?? 1.0;
+                                        return _discContainer(
+                                          isPlaying,
+                                          title,
+                                          rate,
+                                        );
+                                      },
                                     ),
+                                    // Positioned(
+                                    //   right: 0,
+                                    //   top: 0,
+                                    //   child: _playhead(isPlaying),
+                                    // ),
+                                    StreamBuilder(
+                                      stream: player.stream.volume,
+                                      initialData: 100.0,
+                                      builder: (context, volumeSnap) {
+                                        final volume = volumeSnap.data ?? 100.0;
+                                        return _volumeControls(volume.toInt());
+                                      },
+                                    ),
+                                  ],
+                                ),
                                 //   ],
                                 // ),
                               ),
@@ -290,7 +288,7 @@ class _HomePageState extends State<HomePage> {
       onDragExited: (details) => setState(() => _dragAndDrop = false),
       onDragUpdated: (details) =>
           setState(() => _dropPosition = details.localPosition),
-      onDragDone: (details) => setSong(details.files[0].path),
+      onDragDone: (details) => _setSong(details.files[0].path),
       child: IgnorePointer(
         // child:
         //     DottedBorder(
@@ -367,11 +365,11 @@ class _HomePageState extends State<HomePage> {
               spacing: 3,
               children: [
                 TextScroll(
-                  topMessage?.text ??
+                  _topMessage?.text ??
                       '${title ?? 'No file selected'}${meta?.artist != null ? ' - ${meta!.artist}' : ''}',
                   style: TextStyle(
                     fontFamily: 'Pixel 12x10',
-                    color: topMessage?.color ?? Color(0xFFEEEEEE),
+                    color: _topMessage?.color ?? Color(0xFFEEEEEE),
                   ),
                   textAlign: .center,
                   velocity: Velocity(pixelsPerSecond: Offset(30, 0)),
@@ -410,36 +408,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _playhead(bool isPlaying) {
-    return Transform.translate(
-      offset: Offset(10, -15),
-      child: Image.asset('lib/assets/images/playhead.png', scale: 2)
-          .animate(target: isPlaying ? 1 : 0)
-          .custom(
-            duration: Duration(milliseconds: 250),
-            builder: (context, value, child) {
-              return Transform.rotate(
-                angle: value * 0.3 - 0.3,
-                origin: Offset(9, -150) / 2,
-                child: child,
-              );
-            },
-          ),
+  // Widget _playhead(bool isPlaying) {
+  //   return Transform.translate(
+  //     offset: Offset(10, -15),
+  //     child: Image.asset('lib/assets/images/playhead.png', scale: 2)
+  //         .animate(target: isPlaying ? 1 : 0)
+  //         .custom(
+  //           duration: Duration(milliseconds: 250),
+  //           builder: (context, value, child) {
+  //             return Transform.rotate(
+  //               angle: value * 0.3 - 0.3,
+  //               origin: Offset(9, -150) / 2,
+  //               child: child,
+  //             );
+  //           },
+  //         ),
+  //   );
+  // }
+
+  Widget _discContainer(bool isPlaying, String? title, double rate) {
+    return Padding(
+      padding: .symmetric(horizontal: 20),
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: VinylDisc(
+          isPlaying: isPlaying,
+          onScrub: _handleScrub,
+          onScrubStart: _handleScrubStart,
+          onScrubEnd: _handleScrubEnd,
+          coverColor: title != null
+              ? coverColors[stringToRange(
+                  title.trim().toLowerCase(),
+                  0,
+                  coverColors.length - 1,
+                )]
+              : null,
+          rate: rate,
+          // coverPicture: coverPicture,
+        ),
+      ),
     );
   }
 
-  Widget _volumeControls(int volume) {
-    void setVolume(num v) {
-      v = v.clamp(0, 100);
-      player.setVolume(v.toDouble());
-    }
+  void _setVolume(num v) {
+    v = v.clamp(0, 100);
+    player.setVolume(v.toDouble());
+  }
 
+  Widget _volumeControls(int volume) {
     return Column(
       crossAxisAlignment: .end,
       children: [
         HoldImageButton(
           buttonName: 'volumeUp',
-          onHold: () => setVolume(volume + 2),
+          onHold: () => _setVolume(volume + 2),
           scale: 7,
           padding: false,
         ),
@@ -448,7 +470,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             HoldImageButton(
               buttonName: 'volumeDown',
-              onHold: () => setVolume(volume - 2),
+              onHold: () => _setVolume(volume - 2),
               scale: 7,
               padding: false,
             ),
@@ -542,7 +564,7 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(width: 3),
         ImageButton(
-          onPressed: pickFile,
+          onPressed: _pickFile,
           buttonName: 'folder',
           borderRadius: 12,
         ),
