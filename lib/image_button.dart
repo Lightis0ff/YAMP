@@ -173,3 +173,95 @@ class _HoldImageButtonState extends State<HoldImageButton> {
     );
   }
 }
+
+class DoubleImageButton extends StatefulWidget {
+  const new({
+    super.key,
+    required this.onPressed,
+    required this.buttonNames,
+    this.scale = 6,
+    this.tooltips,
+    this.spacing = 2,
+  });
+
+  final List<void Function()?> onPressed;
+  final List<String> buttonNames;
+  final double scale;
+  final List<String>? tooltips;
+  final double spacing;
+
+  @override
+  State<DoubleImageButton> createState() => _DoubleImageButtonState();
+}
+
+class _DoubleImageButtonState extends State<DoubleImageButton> {
+  List<bool> isHovering = List.filled(2, false);
+
+  @override
+  void initState() {
+    assert(
+      widget.buttonNames.length == 2,
+      'The length of buttonNames must be 2',
+    );
+    assert(widget.onPressed.length == 2, 'The length of onPressed must be 2');
+    if (widget.tooltips != null) {
+      assert(widget.tooltips?.length == 2, 'The length of tooltips must be 2');
+    }
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      descendantsAreFocusable: false,
+      canRequestFocus: false,
+      child: Row(
+        spacing: widget.spacing,
+        children: widget.buttonNames.map((buttonName) {
+          final idx = widget.buttonNames.indexOf(buttonName);
+          final onPressed = widget.onPressed.elementAt(idx);
+          final tooltip = widget.tooltips?.elementAt(idx);
+          return IconButton(
+                onPressed: onPressed,
+                padding: .zero,
+                icon: Image.asset(
+                  'lib/assets/images/buttons/${buttonName}HalfButton.png',
+                  scale: widget.scale,
+                ),
+                tooltip: tooltip,
+                // mouseCursor: SystemMouseCursors.click,
+                onHover: (value) => setState(() => isHovering[idx] = value),
+                constraints: .tightFor(),
+              )
+              .animate(target: isHovering[idx] ? 1 : 0)
+              .custom(
+                duration: Duration(milliseconds: 100),
+                builder: (context, value, child) {
+                  return ClipRRect(
+                    borderRadius: idx == 0
+                        ? .only(
+                            topLeft: .circular(100),
+                            bottomLeft: .circular(100),
+                            topRight: .circular(13),
+                            bottomRight: .circular(13),
+                          )
+                        : .only(
+                            topRight: .circular(100),
+                            bottomRight: .circular(100),
+                            topLeft: .circular(13),
+                            bottomLeft: .circular(13),
+                          ),
+                    clipBehavior: .antiAlias,
+                    child: Container(
+                      color: Color(0xFF5A5A5A).withAlpha((255 * value).toInt()),
+                      padding: .all(1.5),
+                      child: child,
+                    ),
+                  );
+                },
+              );
+        }).toList(),
+      ),
+    );
+  }
+}

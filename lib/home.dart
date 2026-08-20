@@ -183,125 +183,100 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('YAMP', style: TextStyle(fontSize: 17)),
-      //   actions: [
-      //     IconButton(
-      //       onPressed: () {},
-      //       icon: Icon(Icons.remove),
-      //       visualDensity: .new(horizontal: -4),
-      //     ),
-      //     IconButton(
-      //       onPressed: () {},
-      //       icon: Icon(Icons.close),
-      //       visualDensity: .new(horizontal: -4),
-      //       hoverColor: Colors.red,
-      //     ),
-      //   ],
-      //   iconTheme: IconThemeData(size: 20),
-      //   leading: Padding(
-      //     padding: .symmetric(vertical: 5),
-      //     child: Image.asset('lib/assets/images/base.png'),
-      //   ),
-      //   toolbarHeight: 35,
-      //   titleSpacing: 0,
-      //   centerTitle: true,
-      //   shadowColor: Colors.black,
-      //   elevation: 0.75,
-      // ),
-      body:
-          // Container(
-          //   decoration: BoxDecoration(
-          //     image: DecorationImage(
-          //       image: AssetImage('lib/assets/images/background.jpg'),
-          //       repeat: .repeat,
-          //     ),
-          //   ),
-          //   child:
-          Stack(
-            children: [
-              StreamBuilder(
-                stream: player.stream.playing,
-                initialData: player.state.playing,
-                builder: (context, playingSnap) {
-                  final isPlaying = playingSnap.data ?? false;
-                  return StreamBuilder(
-                    stream: player.stream.playlist,
-                    builder: (context, playlistSnap) {
-                      final playlist = playlistSnap.data;
-                      CurrentMetadata? currentMetadata;
-                      try {
-                        currentMetadata = getCurrentMetadata(
-                          playlist ?? Playlist([]),
-                        );
-                      } catch (e) {
-                        _showTopMessage(
-                          TopMessage('Error reading metadata', type: .error),
-                        );
-                      }
-                      final meta = currentMetadata?.meta;
-                      final path = currentMetadata?.path;
-                      final title = path != null
-                          ? meta?.title ?? p.basename(path)
-                          : null;
-                      final coverPicture =
-                          meta?.pictures != null && meta!.pictures.isNotEmpty
-                          ? meta.pictures[0]
-                          : null;
-                      return Padding(
-                        padding: .all(5),
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: .min,
-                            spacing: 10,
-                            children: [
-                              _titleAndProgressbar(title, meta),
-                              RepaintBoundary(
-                                child: Stack(
-                                  alignment: .bottomRight,
-                                  children: [
-                                    StreamBuilder(
-                                      stream: player.stream.rate,
-                                      initialData: 1.0,
-                                      builder: (context, rateSnap) {
-                                        final rate = rateSnap.data ?? 1.0;
-                                        return _discContainer(
-                                          isPlaying,
-                                          title,
-                                          rate,
-                                        );
-                                      },
-                                    ),
-                                    // Positioned(
-                                    //   right: 0,
-                                    //   top: 0,
-                                    //   child: _playhead(isPlaying),
-                                    // ),
-                                    StreamBuilder(
-                                      stream: player.stream.volume,
-                                      initialData: 100.0,
-                                      builder: (context, volumeSnap) {
-                                        final volume = volumeSnap.data ?? 100.0;
-                                        return _volumeControls(volume.toInt());
-                                      },
-                                    ),
-                                  ],
+      body: Stack(
+        children: [
+          StreamBuilder(
+            stream: player.stream.playing,
+            initialData: player.state.playing,
+            builder: (context, playingSnap) {
+              final isPlaying = playingSnap.data ?? false;
+              return StreamBuilder(
+                stream: player.stream.playlist,
+                builder: (context, playlistSnap) {
+                  final playlist = playlistSnap.data;
+                  CurrentMetadata? currentMetadata;
+                  try {
+                    currentMetadata = getCurrentMetadata(
+                      playlist ?? Playlist([]),
+                    );
+                  } catch (e) {
+                    _showTopMessage(
+                      TopMessage('Error reading metadata', type: .error),
+                    );
+                  }
+                  final meta = currentMetadata?.meta;
+                  final path = currentMetadata?.path;
+                  final title = path != null
+                      ? meta?.title ?? p.basename(path)
+                      : null;
+                  final coverPicture =
+                      meta?.pictures != null && meta!.pictures.isNotEmpty
+                      ? meta.pictures[0]
+                      : null;
+                  return Padding(
+                    padding: .all(5),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: .min,
+                        spacing: 10,
+                        children: [
+                          _titleAndProgressbar(title, meta),
+                          RepaintBoundary(
+                            child: Stack(
+                              alignment: .bottomRight,
+                              children: [
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: StreamBuilder(
+                                    stream: player.stream.audioDevice,
+                                    builder: (context, audioDeviceSnap) {
+                                      final audioDevice =
+                                          audioDeviceSnap.data ?? .auto();
+                                      return _audioDeviceSelector(audioDevice);
+                                    },
+                                  ),
                                 ),
-                                //   ],
+                                StreamBuilder(
+                                  stream: player.stream.rate,
+                                  initialData: 1.0,
+                                  builder: (context, rateSnap) {
+                                    final rate = rateSnap.data ?? 1.0;
+                                    return _discContainer(
+                                      isPlaying,
+                                      title,
+                                      rate,
+                                    );
+                                  },
+                                ),
+                                // Positioned(
+                                //   right: 0,
+                                //   top: 0,
+                                //   child: _playhead(isPlaying),
                                 // ),
-                              ),
-                              _bottomRow(isPlaying),
-                            ],
+                                StreamBuilder(
+                                  stream: player.stream.volume,
+                                  initialData: 100.0,
+                                  builder: (context, volumeSnap) {
+                                    final volume = volumeSnap.data ?? 100.0;
+                                    return _volumeControls(volume.toInt());
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                          _bottomRow(isPlaying),
+                        ],
+                      ),
+                    ),
                   );
                 },
-              ),
-              dragAndDrop(),
-            ],
+              );
+            },
           ),
+          dragAndDrop(),
+        ],
+      ),
     );
   }
 
@@ -383,6 +358,7 @@ class _HomePageState extends State<HomePage> {
               color: Colors.black,
               borderRadius: .circular(5),
             ),
+            constraints: BoxConstraints(maxHeight: 36.5),
             padding: .symmetric(horizontal: 7, vertical: 5),
             child: Column(
               spacing: 3,
@@ -426,6 +402,57 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  void _changeAudioDevice(AudioDevice audioDevice, int difference) {
+    final devices = player.state.audioDevices;
+    final idx = () {
+      try {
+        return devices.indexOf(audioDevice);
+      } catch (e) {
+        return 0;
+      }
+    }();
+    final nextIdx = () {
+      if (idx + difference < 0) {
+        return devices.length - 1;
+      } else if (idx + difference >= devices.length) {
+        return 0;
+      } else {
+        return idx + difference;
+      }
+    }();
+    final newDevice = devices.elementAt(nextIdx);
+    player.setAudioDevice(newDevice);
+    _showTopMessage(
+      TopMessage(
+        '${nextIdx + 1}. ${newDevice.description}',
+        duration: Duration(seconds: 5),
+      ),
+    );
+  }
+
+  Widget _audioDeviceSelector(AudioDevice audioDevice) {
+    return Column(
+      children: [
+        DoubleImageButton(
+          buttonNames: ['left', 'right'],
+          onPressed: [
+            () => _changeAudioDevice(audioDevice, -1),
+            () => _changeAudioDevice(audioDevice, 1),
+          ],
+          spacing: 0,
+          scale: 9,
+        ),
+        Text(
+          'Audio device',
+          style: TextStyle(fontSize: 10),
+          textAlign: .center,
+          maxLines: 1,
+          overflow: .ellipsis,
         ),
       ],
     );
