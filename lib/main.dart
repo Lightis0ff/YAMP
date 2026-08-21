@@ -10,7 +10,10 @@ void main(List<String> args) async {
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  const windowOptions = WindowOptions(size: Size(400, 490));
+  const windowOptions = WindowOptions(
+    size: Size(400, 490),
+    titleBarStyle: .hidden,
+  );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();

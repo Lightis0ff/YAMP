@@ -11,6 +11,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:path/path.dart' as p;
 import 'package:file_picker/file_picker.dart';
 import 'package:text_scroll/text_scroll.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:yamp/utils.dart';
 import 'package:yamp/vinyl.dart';
 
@@ -183,6 +184,43 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IgnorePointer(
+          child: Padding(
+            padding: .symmetric(vertical: 5),
+            child: Image.asset('lib/assets/images/logo.png'),
+          ),
+        ),
+        title: IgnorePointer(
+          child: Text('YAMP', style: TextStyle(fontSize: 17)),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () => windowManager.minimize(),
+            icon: Icon(Icons.remove),
+            // visualDensity: .new(horizontal: -4),
+            padding: .zero,
+            style: IconButton.styleFrom(shape: LinearBorder()),
+          ),
+          IconButton(
+            onPressed: () => windowManager.close(),
+            icon: Icon(Icons.close),
+            // visualDensity: .new(horizontal: -4),
+            padding: .zero,
+            style: IconButton.styleFrom(shape: LinearBorder()),
+            hoverColor: Colors.red,
+          ),
+        ],
+        iconTheme: IconThemeData(size: 20),
+        toolbarHeight: 30,
+        titleSpacing: 0,
+        centerTitle: true,
+        shadowColor: Colors.black,
+        elevation: 0.75,
+        flexibleSpace: GestureDetector(
+          onPanStart: (details) => windowManager.startDragging(),
+        ),
+      ),
       body: Stack(
         children: [
           StreamBuilder(
