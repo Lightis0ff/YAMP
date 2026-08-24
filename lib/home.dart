@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:path/path.dart' as p;
 import 'package:file_picker/file_picker.dart';
 import 'package:text_scroll/text_scroll.dart';
-import 'package:window_manager/window_manager.dart';
+import 'package:yamp/prefs.dart';
+import 'package:yamp/settings.dart';
 import 'package:yamp/utils.dart';
 import 'package:yamp/vinyl.dart';
 
@@ -60,6 +62,11 @@ class _HomePageState extends State<HomePage> {
   TopMessage? _topMessage;
   Timer? _topMessageTimer;
 
+  var showFForwardButton = Defaults.showFForwardButton;
+  var fastForwardSpeed = Defaults.fastForwardSpeed;
+  var fastForwardPitch = Defaults.fastForwardPitch;
+  var customTitleBar = Defaults.customTitleBar;
+
   void _pickFile() async {
     final pickedFile = await FilePicker.pickFile(type: .audio);
     if (pickedFile == null || pickedFile.path == null) return;
@@ -97,7 +104,42 @@ class _HomePageState extends State<HomePage> {
     if (widget.openFilePath != null && widget.openFilePath!.isNotEmpty) {
       _setSong(widget.openFilePath!);
     }
+    _getSettings();
     super.initState();
+  }
+
+  Future<void> _getSettings() async {
+    final sffb = await Prefs.getShowFForwardButton();
+    final ffs = await Prefs.getFastForwardSpeed();
+    final ffp = await Prefs.getFastForwardPitch();
+    final ctb = await Prefs.getCustomTitlebar();
+    setState(() {
+      showFForwardButton = sffb ?? showFForwardButton;
+      fastForwardSpeed = ffs ?? fastForwardSpeed;
+      fastForwardPitch = ffp ?? fastForwardPitch;
+      customTitleBar = ctb ?? customTitleBar;
+    });
+    _syncDefaultAudioDevice(player.state.audioDevices);
+
+    player.stream.audioDevices.listen(
+      (event) => _syncDefaultAudioDevice(event),
+    );
+  }
+
+  Future<void> _syncDefaultAudioDevice(List<AudioDevice> devices) async {
+    final dad = await Prefs.getDefaultAudioDevice();
+    player.setAudioDevice(
+      devices.firstWhere((d) => d.name == dad, orElse: () => .auto()),
+    );
+  }
+
+  Future<void> openSettings(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (context) =>
+          Dialog.fullscreen(child: SettingsTab(player: player)),
+    );
+    await _getSettings();
   }
 
   bool _onKeyPress(KeyEvent event) {
@@ -184,43 +226,20 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IgnorePointer(
-          child: Padding(
-            padding: .symmetric(vertical: 5),
-            child: Image.asset('lib/assets/images/logo.png'),
-          ),
-        ),
-        title: IgnorePointer(
-          child: Text('YAMP', style: TextStyle(fontSize: 17)),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => windowManager.minimize(),
-            icon: Icon(Icons.remove),
-            // visualDensity: .new(horizontal: -4),
-            padding: .zero,
-            style: IconButton.styleFrom(shape: LinearBorder()),
-          ),
-          IconButton(
-            onPressed: () => windowManager.close(),
-            icon: Icon(Icons.close),
-            // visualDensity: .new(horizontal: -4),
-            padding: .zero,
-            style: IconButton.styleFrom(shape: LinearBorder()),
-            hoverColor: Colors.red,
-          ),
-        ],
-        iconTheme: IconThemeData(size: 20),
-        toolbarHeight: 30,
-        titleSpacing: 0,
-        centerTitle: true,
-        shadowColor: Colors.black,
-        elevation: 0.75,
-        flexibleSpace: GestureDetector(
-          onPanStart: (details) => windowManager.startDragging(),
-        ),
-      ),
+      appBar: customTitleBar
+          ? titlebar(
+              context,
+              customButtons: [
+                IconButton(
+                  onPressed: () => openSettings(context),
+                  icon: Icon(Symbols.more_horiz, weight: 600),
+                  padding: .zero,
+                  style: IconButton.styleFrom(shape: LinearBorder()),
+                  tooltip: 'Settings',
+                ),
+              ],
+            )
+          : null,
       body: Stack(
         children: [
           StreamBuilder(
@@ -247,10 +266,10 @@ class _HomePageState extends State<HomePage> {
                   final title = path != null
                       ? meta?.title ?? p.basename(path)
                       : null;
-                  final coverPicture =
-                      meta?.pictures != null && meta!.pictures.isNotEmpty
-                      ? meta.pictures[0]
-                      : null;
+                  // final coverPicture =
+                  //     meta?.pictures != null && meta!.pictures.isNotEmpty
+                  //     ? meta.pictures.first
+                  //     : null;
                   return Padding(
                     padding: .all(5),
                     child: Center(
@@ -263,18 +282,6 @@ class _HomePageState extends State<HomePage> {
                             child: Stack(
                               alignment: .bottomRight,
                               children: [
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: StreamBuilder(
-                                    stream: player.stream.audioDevice,
-                                    builder: (context, audioDeviceSnap) {
-                                      final audioDevice =
-                                          audioDeviceSnap.data ?? .auto();
-                                      return _audioDeviceSelector(audioDevice);
-                                    },
-                                  ),
-                                ),
                                 StreamBuilder(
                                   stream: player.stream.rate,
                                   initialData: 1.0,
@@ -300,6 +307,16 @@ class _HomePageState extends State<HomePage> {
                                     return _volumeControls(volume.toInt());
                                   },
                                 ),
+                                if (!customTitleBar)
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    child: ImageButton(
+                                      onPressed: () => openSettings(context),
+                                      buttonName: 'settings',
+                                      tooltip: 'Settings',
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -324,7 +341,7 @@ class _HomePageState extends State<HomePage> {
       onDragExited: (details) => setState(() => _dragAndDrop = false),
       onDragUpdated: (details) =>
           setState(() => _dropPosition = details.localPosition),
-      onDragDone: (details) => _setSong(details.files[0].path),
+      onDragDone: (details) => _setSong(details.files.first.path),
       child: IgnorePointer(
         // child:
         //     DottedBorder(
@@ -361,7 +378,7 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: coverColors[0],
+                                    color: coverColors.first,
                                     shape: .circle,
                                   ),
                                   width: 50,
@@ -445,57 +462,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _changeAudioDevice(AudioDevice audioDevice, int difference) {
-    final devices = player.state.audioDevices;
-    final idx = () {
-      try {
-        return devices.indexOf(audioDevice);
-      } catch (e) {
-        return 0;
-      }
-    }();
-    final nextIdx = () {
-      if (idx + difference < 0) {
-        return devices.length - 1;
-      } else if (idx + difference >= devices.length) {
-        return 0;
-      } else {
-        return idx + difference;
-      }
-    }();
-    final newDevice = devices.elementAt(nextIdx);
-    player.setAudioDevice(newDevice);
-    _showTopMessage(
-      TopMessage(
-        '${nextIdx + 1}. ${newDevice.description}',
-        duration: Duration(seconds: 5),
-      ),
-    );
-  }
-
-  Widget _audioDeviceSelector(AudioDevice audioDevice) {
-    return Column(
-      children: [
-        DoubleImageButton(
-          buttonNames: ['left', 'right'],
-          onPressed: [
-            () => _changeAudioDevice(audioDevice, -1),
-            () => _changeAudioDevice(audioDevice, 1),
-          ],
-          spacing: 0,
-          scale: 9,
-        ),
-        Text(
-          'Audio device',
-          style: TextStyle(fontSize: 10),
-          textAlign: .center,
-          maxLines: 1,
-          overflow: .ellipsis,
-        ),
-      ],
-    );
-  }
-
   // Widget _playhead(bool isPlaying) {
   //   return Transform.translate(
   //     offset: Offset(10, -15),
@@ -548,6 +514,7 @@ class _HomePageState extends State<HomePage> {
           onHold: () => _setVolume(volume + 2),
           scale: 7,
           padding: false,
+          tooltip: 'Volume up',
         ),
         Row(
           mainAxisSize: .min,
@@ -557,6 +524,7 @@ class _HomePageState extends State<HomePage> {
               onHold: () => _setVolume(volume - 2),
               scale: 7,
               padding: false,
+              tooltip: 'Volume down',
             ),
             RepaintBoundary(
               child: Container(
@@ -594,29 +562,37 @@ class _HomePageState extends State<HomePage> {
           onPressed: isPlaying ? null : () => player.play(),
           buttonName: 'play',
           isSelected: isPlaying,
+          tooltip: 'Play',
         ),
-        HoldImageButton(
-          buttonName: 'fastForward',
-          onHold: () {
-            _wasPlayingBeforeFForward ??= isPlaying;
-            if (!isPlaying) player.play();
-            player.setRate(2.5);
-            player.setPitch(1.4);
-          },
-          onCancel: () {
-            if (_wasPlayingBeforeFForward == false) player.pause();
-            player.setRate(1);
-            player.setPitch(1);
-            _wasPlayingBeforeFForward = null;
-          },
-          onPressed: () {},
-        ),
+        if (showFForwardButton)
+          HoldImageButton(
+            buttonName: 'fastForward',
+            tooltip: 'Fast forward',
+            onHold: () {
+              _wasPlayingBeforeFForward ??= isPlaying;
+              if (!isPlaying) player.play();
+              player.setRate(fastForwardSpeed);
+              player.setPitch(fastForwardPitch);
+            },
+            onCancel: () {
+              if (_wasPlayingBeforeFForward == false) player.pause();
+              player.setRate(1);
+              player.setPitch(1);
+              _wasPlayingBeforeFForward = null;
+            },
+            onPressed: () {},
+          ),
         ImageButton(
           onPressed: isPlaying ? () => player.pause() : null,
           buttonName: 'pause',
           isSelected: !isPlaying,
+          tooltip: 'Pause',
         ),
-        ImageButton(onPressed: () => player.stop(), buttonName: 'stop'),
+        ImageButton(
+          onPressed: () => player.stop(),
+          buttonName: 'stop',
+          tooltip: 'Stop',
+        ),
         Spacer(),
         StreamBuilder(
           stream: player.stream.position,
@@ -624,16 +600,16 @@ class _HomePageState extends State<HomePage> {
             final pos = posSnap.data ?? Duration.zero;
             return Container(
               decoration: BoxDecoration(
-                color: Color(0xFF88AD36), //Colors.black
+                color: Color(0xFF88AD36),
                 borderRadius: .circular(5),
               ),
               padding: .symmetric(horizontal: 5, vertical: 3),
               child: Text(
-                printDuration(pos),
+                durationString(pos),
                 style: TextStyle(
                   fontFamily: 'Seven Segment',
                   fontSize: 18,
-                  color: Color(0xFF081819), //Color(0xFFEEEEEE)
+                  color: Color(0xFF081819),
                   shadows: [
                     Shadow(
                       offset: Offset(0, 1),
@@ -651,6 +627,7 @@ class _HomePageState extends State<HomePage> {
           onPressed: _pickFile,
           buttonName: 'folder',
           borderRadius: 12,
+          tooltip: 'Select file',
         ),
       ],
     );

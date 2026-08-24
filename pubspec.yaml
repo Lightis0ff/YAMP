@@ -36,7 +36,10 @@ dependencies:
   audio_metadata_reader: ^1.7.1
   text_scroll: ^0.2.1
   holding_gesture: ^1.2.0
-  desktop_drop: ^0.7.1
+  desktop_drop: 0.7.1
+  material_symbols_icons: ^4.2960.0
+  scrollable_positioned_list: ^0.3.8
+  shared_preferences: ^2.5.5
   media_kit:
     git:
       url: https://github.com/media-kit/media-kit.git

@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:yamp/home.dart';
+import 'package:yamp/prefs.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  const windowOptions = WindowOptions(
+  final customTitleBar =
+      (await Prefs.getCustomTitlebar()) ?? Defaults.customTitleBar;
+  final windowOptions = WindowOptions(
     size: Size(400, 490),
-    titleBarStyle: .hidden,
+    titleBarStyle: customTitleBar ? .hidden : .normal,
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
@@ -21,9 +24,7 @@ void main(List<String> args) async {
   await windowManager.setResizable(false);
   await windowManager.setMaximizable(false);
 
-  String? openFilePath = Platform.isWindows && args.isNotEmpty
-      ? args.first
-      : null;
+  String? openFilePath = Platform.isWindows ? args.firstOrNull : null;
 
   runApp(MyApp(openFilePath: openFilePath));
 }
@@ -36,7 +37,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(colorScheme: .dark(primary: Colors.white)),
+      theme: ThemeData(
+        colorScheme: .dark(primary: Colors.white),
+        tooltipTheme: TooltipThemeData(
+          waitDuration: Duration(milliseconds: 500),
+          verticalOffset: 30,
+        ),
+      ),
       home: HomePage(openFilePath: openFilePath),
       debugShowCheckedModeBanner: false,
     );

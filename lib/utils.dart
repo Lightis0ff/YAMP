@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:crypto/crypto.dart';
@@ -24,7 +26,58 @@ CurrentMetadata? getCurrentMetadata(Playlist playlist) {
   );
 }
 
-String printDuration(Duration duration, {bool milliseconds = false}) {
+AppBar titlebar(
+  BuildContext context, {
+  String title = 'YAMP',
+  List<Widget>? customButtons,
+}) => AppBar(
+  leading: IgnorePointer(
+    child: Padding(
+      padding: .symmetric(vertical: 4),
+      child: Image.asset('lib/assets/images/logo.png'),
+    ),
+  ),
+  title: IgnorePointer(child: Text(title, style: TextStyle(fontSize: 15))),
+  actions:
+      [
+            if (customButtons != null) ...(customButtons),
+            IconButton(
+              onPressed: () => windowManager.minimize(),
+              icon: Icon(Symbols.remove),
+              padding: .zero,
+              style: IconButton.styleFrom(shape: LinearBorder()),
+              tooltip: 'Minimize',
+            ),
+            IconButton(
+              onPressed: () => windowManager.close(),
+              icon: Icon(Symbols.close),
+              padding: .zero,
+              style: IconButton.styleFrom(shape: LinearBorder()),
+              hoverColor: Colors.red,
+              tooltip: 'Close',
+            ),
+          ]
+          .map(
+            (a) => Focus(
+              descendantsAreFocusable: false,
+              canRequestFocus: false,
+              child: a,
+            ),
+          )
+          .toList(),
+  iconTheme: IconThemeData(size: 20),
+  toolbarHeight: 27,
+  titleSpacing: 0,
+  centerTitle: true,
+  shadowColor: Colors.black,
+  elevation: 0.75,
+  flexibleSpace: GestureDetector(
+    onPanStart: (details) => windowManager.startDragging(),
+  ),
+  leadingWidth: 27,
+);
+
+String durationString(Duration duration, {bool milliseconds = false}) {
   String negativeSign = duration.isNegative ? '-' : '';
   String twoDigits(int n) => n.toString().padLeft(2, '0');
   String threeDigits(int n) => n.toString().padLeft(3, '0');
