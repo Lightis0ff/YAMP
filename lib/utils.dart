@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
@@ -95,6 +96,49 @@ AlertDialog styledAlertDialog(
   shape: RoundedRectangleBorder(borderRadius: .circular(15)),
   clipBehavior: .hardEdge,
 );
+
+OutlinedButton actionOutlineButton({
+  required void Function()? onPressed,
+  required String text,
+}) => OutlinedButton(
+  onPressed: onPressed,
+  style: OutlinedButton.styleFrom(
+    side: BorderSide(color: CupertinoColors.systemBrown),
+    visualDensity: VisualDensity(vertical: -2),
+    padding: .symmetric(horizontal: 6),
+    shape: RoundedRectangleBorder(borderRadius: .circular(8)),
+  ),
+  child: Text(text, style: TextStyle(color: Color(0xFFCCCCCC))),
+);
+
+ElevatedButton actionElevatedButton({
+  required void Function()? onPressed,
+  required String text,
+  IconData? icon,
+  IconAlignment? iconAlignment,
+}) => icon == null
+    ? ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: CupertinoColors.systemBrown,
+          visualDensity: VisualDensity(vertical: -2),
+          padding: .symmetric(horizontal: 10),
+          shape: RoundedRectangleBorder(borderRadius: .circular(8)),
+        ),
+        child: Text(text),
+      )
+    : ElevatedButton.icon(
+        onPressed: onPressed,
+        label: Text(text),
+        icon: Icon(icon),
+        iconAlignment: iconAlignment,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: CupertinoColors.systemBrown,
+          visualDensity: VisualDensity(vertical: -2),
+          padding: .symmetric(horizontal: 10),
+          shape: RoundedRectangleBorder(borderRadius: .circular(8)),
+        ),
+      );
 
 String durationString(Duration duration, {bool milliseconds = false}) {
   String negativeSign = duration.isNegative ? '-' : '';

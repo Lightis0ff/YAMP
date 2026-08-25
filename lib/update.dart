@@ -319,31 +319,19 @@ Future<void> showUpdateModal(BuildContext context, UpdateInfo updateInfo) {
         ],
       ),
       actions: [
-        OutlinedButton(
+        actionOutlineButton(
           onPressed: () => Navigator.of(context).pop(),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: CupertinoColors.systemBrown),
-            visualDensity: VisualDensity(vertical: -2),
-            padding: .symmetric(horizontal: 6),
-            shape: RoundedRectangleBorder(borderRadius: .circular(8)),
-          ),
-          child: Text('Later', style: TextStyle(color: Color(0xFFCCCCCC))),
+          text: 'Later',
         ),
-        ElevatedButton.icon(
+        actionElevatedButton(
           onPressed: () async {
             if (updateInfo.updateUrl == null) return;
             await launchUrl(Uri.parse(updateInfo.updateUrl!));
             Navigator.of(context).pop();
           },
-          label: Text('Download'),
-          icon: Icon(Symbols.open_in_new),
+          text: 'Download',
+          icon: Symbols.open_in_new,
           iconAlignment: .end,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: CupertinoColors.systemBrown,
-            visualDensity: VisualDensity(vertical: -2),
-            padding: .symmetric(horizontal: 10),
-            shape: RoundedRectangleBorder(borderRadius: .circular(8)),
-          ),
         ),
       ],
     ),
@@ -365,15 +353,9 @@ Future<void> showUpdateNotNeededModal(BuildContext context) {
           style: Theme.of(context).textTheme.bodyLarge,
         ),
         actions: [
-          ElevatedButton(
+          actionElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: CupertinoColors.systemBrown,
-              visualDensity: VisualDensity(vertical: -2),
-              padding: .symmetric(horizontal: 10),
-              shape: RoundedRectangleBorder(borderRadius: .circular(8)),
-            ),
-            child: Text('Close'),
+            text: 'Close',
           ),
         ],
       );

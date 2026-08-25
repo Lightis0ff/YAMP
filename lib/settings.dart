@@ -6,6 +6,8 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:yamp/prefs.dart';
 import 'package:yamp/utils.dart';
@@ -28,8 +30,7 @@ class SettingsTab extends StatefulWidget {
 }
 
 class _SettingsTabState extends State<SettingsTab> {
-  final itemScrollController = ItemScrollController();
-  final itemPositionsListener = ItemPositionsListener.create();
+  final _itemScrollController = ItemScrollController();
   PackageInfo? packageInfo;
 
   var defaultAudioDevice = Defaults.defaultAudioDevice;
@@ -156,6 +157,40 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
       ],
     ),
+    SettingsCategory(
+      name: 'Other',
+      icon: Symbols.pending,
+      children: [
+        SettingsElevatedButton(
+          label: 'Wiew GitHub repository',
+          onPressed: () =>
+              launchUrl(Uri.parse('https://github.com/Lightis0ff/yamp/')),
+          buttonText: 'View',
+          icon: Symbols.open_in_new,
+          iconAlignment: .end,
+        ),
+        SettingsElevatedButton(
+          label: 'Submit a new issue',
+          onPressed: () => launchUrl(
+            Uri.parse('https://github.com/Lightis0ff/yamp/issues/new/'),
+          ),
+          buttonText: 'Submit',
+          icon: Symbols.open_in_new,
+          iconAlignment: .end,
+        ),
+        SettingsElevatedButton(
+          label: 'Reset all settings',
+          description: 'This will close the window',
+          onPressed: () async {
+            if (!mounted) return;
+            await SharedPreferencesAsync().clear();
+            windowManager.close();
+          },
+          buttonText: 'Reset',
+          confirmation: true,
+        ),
+      ],
+    ),
   ];
 
   @override
@@ -224,18 +259,11 @@ class _SettingsTabState extends State<SettingsTab> {
         children: [
           Expanded(
             child: ScrollablePositionedList.separated(
-              itemScrollController: itemScrollController,
-              itemPositionsListener: itemPositionsListener,
+              itemScrollController: _itemScrollController,
               padding: .all(10),
               itemCount: categories.length + 1,
               itemBuilder: (context, idx) {
-                if (idx == 0) {
-                  return ValueListenableBuilder(
-                    valueListenable: itemPositionsListener.itemPositions,
-                    builder: (context, value, _) =>
-                        _categorySelector(context, value),
-                  );
-                }
+                if (idx == 0) return _categorySelector(context);
                 final cat = categories.elementAt(idx - 1);
                 return Column(
                   crossAxisAlignment: .stretch,
@@ -264,31 +292,7 @@ class _SettingsTabState extends State<SettingsTab> {
     );
   }
 
-  int getFirstVisibleItem(Iterable<ItemPosition> positions) => positions
-      .where((ItemPosition position) => position.itemTrailingEdge > 0)
-      .reduce(
-        (ItemPosition min, ItemPosition position) =>
-            position.itemTrailingEdge < min.itemTrailingEdge ? position : min,
-      )
-      .index;
-  int getLastVisibleItem(Iterable<ItemPosition> positions) => positions
-      .where((ItemPosition position) => position.itemLeadingEdge < 1)
-      .reduce(
-        (ItemPosition max, ItemPosition position) =>
-            position.itemLeadingEdge > max.itemLeadingEdge ? position : max,
-      )
-      .index;
-
-  Widget _categorySelector(
-    BuildContext context,
-    Iterable<ItemPosition> itemPositions,
-  ) {
-    final min = itemPositions.isNotEmpty
-        ? getFirstVisibleItem(itemPositions) + 1
-        : -1;
-    final max = itemPositions.isNotEmpty
-        ? getLastVisibleItem(itemPositions) + 1
-        : -1;
+  Widget _categorySelector(BuildContext context) {
     return Padding(
       padding: .symmetric(horizontal: 3),
       child: Wrap(
@@ -315,26 +319,21 @@ class _SettingsTabState extends State<SettingsTab> {
           ...categories.map((cat) {
             final idx =
                 categories.map((c) => c.name).toList().indexOf(cat.name) + 1;
-            final visible = idx >= min && idx <= max;
             return ElevatedButton(
-              onPressed: () => itemScrollController.scrollTo(
+              onPressed: () => _itemScrollController.scrollTo(
                 index: idx,
                 duration: Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: visible
-                    ? Color(0xFFC0C0C0)
-                    : Color(0xFF262626),
+                backgroundColor: Color(0xFF313131),
                 padding: .symmetric(horizontal: 5),
                 visualDensity: VisualDensity(vertical: -4),
                 enabledMouseCursor: SystemMouseCursors.click,
               ),
               child: Text(
                 cat.name,
-                style: Theme.of(context).textTheme.titleSmall!.merge(
-                  TextStyle(color: visible ? Colors.black : Color(0xFF8F8F8F)),
-                ),
+                style: Theme.of(context).textTheme.titleSmall,
               ),
             );
           }),
@@ -521,11 +520,17 @@ class SettingsElevatedButton extends SettingsButton {
     required this.onPressed,
     required this.buttonText,
     this.highlited = false,
+    this.confirmation = false,
+    this.icon,
+    this.iconAlignment,
   });
 
   final void Function()? onPressed;
   final String buttonText;
   final bool highlited;
+  final bool confirmation;
+  final IconData? icon;
+  final IconAlignment? iconAlignment;
 
   @override
   Widget build(BuildContext context) {
@@ -548,8 +553,29 @@ class SettingsElevatedButton extends SettingsButton {
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: onPressed,
+          ElevatedButton.icon(
+            onPressed: confirmation
+                ? () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => styledAlertDialog(
+                        context,
+                        title: Text('Are you sure?'),
+                        actions: [
+                          actionElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            text: 'Cancel',
+                          ),
+                          actionOutlineButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            text: 'Ok',
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true && onPressed != null) onPressed!();
+                  }
+                : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: highlited
                   ? CupertinoColors.systemBrown
@@ -558,7 +584,9 @@ class SettingsElevatedButton extends SettingsButton {
               visualDensity: VisualDensity(vertical: -2),
               padding: .symmetric(horizontal: 8),
             ),
-            child: Text(buttonText),
+            label: Text(buttonText),
+            icon: icon != null ? Icon(icon) : null,
+            iconAlignment: iconAlignment,
           ),
         ],
       ),
