@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:holding_gesture/holding_gesture.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:yamp/prefs.dart';
 import 'package:yamp/utils.dart';
+import 'package:yamp/update.dart' as updater;
 
 class SettingsCategory {
   const new({required this.name, required this.icon, required this.children});
@@ -28,12 +30,14 @@ class SettingsTab extends StatefulWidget {
 class _SettingsTabState extends State<SettingsTab> {
   final itemScrollController = ItemScrollController();
   final itemPositionsListener = ItemPositionsListener.create();
+  PackageInfo? packageInfo;
 
   var defaultAudioDevice = Defaults.defaultAudioDevice;
   var showFForwardButton = Defaults.showFForwardButton;
   var fastForwardSpeed = Defaults.fastForwardSpeed;
   var fastForwardPitch = Defaults.fastForwardPitch;
   var customTitleBar = Defaults.customTitleBar;
+  var autoCheckUpdates = Defaults.autoCheckUpdates;
 
   List<SettingsCategory> get categories => [
     SettingsCategory(
@@ -122,17 +126,50 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
       ],
     ),
+    SettingsCategory(
+      name: 'Updates',
+      icon: Symbols.update,
+      children: [
+        SettingsSwitch(
+          label: 'Automatically check for updates',
+          description: '(when opening YAMP)',
+          defaultValue: Defaults.autoCheckUpdates,
+          value: autoCheckUpdates,
+          onChanged: (value) async {
+            await Prefs.setAutoCheckUpdates(value);
+            setState(() => autoCheckUpdates = value);
+          },
+        ),
+        SettingsElevatedButton(
+          label: 'Manually check for updates',
+          description: 'Current version: ${packageInfo?.version ?? 'unknown'}',
+          onPressed: () async {
+            final updateInfo = await updater.checkForUpdate();
+            if (!mounted) return;
+            if (updateInfo.updateAvailable) {
+              updater.showUpdateModal(context, updateInfo);
+            } else {
+              updater.showUpdateNotNeededModal(context);
+            }
+          },
+          buttonText: 'Check now',
+        ),
+      ],
+    ),
   ];
 
   @override
   void initState() {
     ServicesBinding.instance.keyboard.addHandler(_onKeyPress);
     () async {
+      packageInfo = await PackageInfo.fromPlatform();
+
       final dad = await Prefs.getDefaultAudioDevice();
       final sffb = await Prefs.getShowFForwardButton();
       final ffs = await Prefs.getFastForwardSpeed();
       final ffp = await Prefs.getFastForwardPitch();
       final ctb = await Prefs.getCustomTitlebar();
+      final acu = await Prefs.getAutoCheckUpdates();
       setState(() {
         defaultAudioDevice = widget.player.state.audioDevices.firstWhere(
           (d) => d.name == dad,
@@ -142,6 +179,7 @@ class _SettingsTabState extends State<SettingsTab> {
         fastForwardSpeed = ffs ?? fastForwardSpeed;
         fastForwardPitch = ffp ?? fastForwardPitch;
         customTitleBar = ctb ?? customTitleBar;
+        autoCheckUpdates = acu ?? autoCheckUpdates;
       });
     }();
     super.initState();
@@ -212,6 +250,7 @@ class _SettingsTabState extends State<SettingsTab> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 3),
                     ...cat.children,
                   ],
                 );
@@ -306,8 +345,14 @@ class _SettingsTabState extends State<SettingsTab> {
 }
 
 abstract class SettingsButton extends StatelessWidget {
-  const new({super.key, required this.label, required this.defaultValue});
+  const new({
+    super.key,
+    required this.label,
+    this.description,
+    this.defaultValue,
+  });
   final String label;
+  final String? description;
   final dynamic defaultValue;
 }
 
@@ -315,6 +360,7 @@ class SettingsSwitch extends SettingsButton {
   const new({
     super.key,
     required super.label,
+    super.description,
     required super.defaultValue,
     required this.value,
     required this.onChanged,
@@ -344,7 +390,17 @@ class SettingsSwitch extends SettingsButton {
         spacing: 10,
         children: [
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodyLarge),
+                if (description != null)
+                  Text(
+                    description!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
           ),
           Transform.scale(
             scale: 0.9,
@@ -364,6 +420,7 @@ class SettingsNumberSelector extends SettingsButton {
   const new({
     super.key,
     required super.label,
+    super.description,
     required super.defaultValue,
     required this.value,
     this.step = 1,
@@ -408,7 +465,17 @@ class SettingsNumberSelector extends SettingsButton {
         spacing: 10,
         children: [
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodyLarge),
+                if (description != null)
+                  Text(
+                    description!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
           ),
           Row(
             spacing: 5,
@@ -446,10 +513,64 @@ class SettingsNumberSelector extends SettingsButton {
   }
 }
 
+class SettingsElevatedButton extends SettingsButton {
+  const new({
+    super.key,
+    required super.label,
+    super.description,
+    required this.onPressed,
+    required this.buttonText,
+    this.highlited = false,
+  });
+
+  final void Function()? onPressed;
+  final String buttonText;
+  final bool highlited;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: .symmetric(horizontal: 5, vertical: 10),
+      child: Row(
+        mainAxisAlignment: .spaceBetween,
+        spacing: 10,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodyLarge),
+                if (description != null)
+                  Text(
+                    description!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: highlited
+                  ? CupertinoColors.systemBrown
+                  : Theme.of(context).focusColor,
+              shape: RoundedRectangleBorder(borderRadius: .circular(8)),
+              visualDensity: VisualDensity(vertical: -2),
+              padding: .symmetric(horizontal: 8),
+            ),
+            child: Text(buttonText),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SettingsDropdownButton extends SettingsButton {
   const new({
     super.key,
     required super.label,
+    super.description,
     required super.defaultValue,
     required this.items,
     required this.value,
@@ -480,7 +601,17 @@ class SettingsDropdownButton extends SettingsButton {
         children: [
           Expanded(
             flex: 3,
-            child: Text(label, style: Theme.of(context).textTheme.bodyLarge),
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodyLarge),
+                if (description != null)
+                  Text(
+                    description!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+              ],
+            ),
           ),
           Expanded(
             flex: 2,

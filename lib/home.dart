@@ -15,6 +15,7 @@ import 'package:text_scroll/text_scroll.dart';
 import 'package:yamp/prefs.dart';
 import 'package:yamp/settings.dart';
 import 'package:yamp/utils.dart';
+import 'package:yamp/update.dart' as updater;
 import 'package:yamp/vinyl.dart';
 
 import 'image_button.dart';
@@ -41,9 +42,10 @@ class TopMessage {
 }
 
 class HomePage extends StatefulWidget {
-  const new({super.key, required this.openFilePath});
+  const new(this.openFilePath, this.updateInfo, {super.key});
 
   final String? openFilePath;
+  final updater.UpdateInfo? updateInfo;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -106,6 +108,11 @@ class _HomePageState extends State<HomePage> {
     }
     _getSettings();
     super.initState();
+    if (widget.updateInfo != null && widget.updateInfo!.updateAvailable) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        updater.showUpdateModal(context, widget.updateInfo!);
+      });
+    }
   }
 
   Future<void> _getSettings() async {

@@ -1,5 +1,5 @@
 name: yamp
-description: "A new Flutter project."
+description: 'A new Flutter project.'
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -40,6 +40,10 @@ dependencies:
   material_symbols_icons: ^4.2960.0
   scrollable_positioned_list: ^0.3.8
   shared_preferences: ^2.5.5
+  package_info_plus: ^10.2.1
+  http: ^1.6.0
+  pub_semver: ^2.2.0
+  url_launcher: ^6.3.2
   media_kit:
     git:
       url: https://github.com/media-kit/media-kit.git
@@ -77,7 +81,6 @@ msix_config:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

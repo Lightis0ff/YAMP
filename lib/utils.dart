@@ -71,10 +71,29 @@ AppBar titlebar(
   centerTitle: true,
   shadowColor: Colors.black,
   elevation: 0.75,
+  scrolledUnderElevation: 0.75,
   flexibleSpace: GestureDetector(
     onPanStart: (details) => windowManager.startDragging(),
   ),
   leadingWidth: 27,
+);
+
+AlertDialog styledAlertDialog(
+  BuildContext context, {
+  Widget? title,
+  Widget? content,
+  List<Widget>? actions,
+}) => AlertDialog(
+  title: Container(color: Colors.white10, padding: .all(10), child: title),
+  titleTextStyle: Theme.of(context).textTheme.headlineSmall,
+  titlePadding: .zero,
+  content: content,
+  contentTextStyle: Theme.of(context).textTheme.bodyLarge,
+  contentPadding: .all(10),
+  actions: actions,
+  actionsPadding: .all(10),
+  shape: RoundedRectangleBorder(borderRadius: .circular(15)),
+  clipBehavior: .hardEdge,
 );
 
 String durationString(Duration duration, {bool milliseconds = false}) {

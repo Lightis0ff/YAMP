@@ -11,6 +11,9 @@ class Prefs {
 
   static const _customTitleBarKey = 'customTitleBar';
 
+  static const _autoCheckUpdatesKey = 'autoCheckUpdates';
+  static const _skippedVersionKey = 'skippedVersion';
+
   static Future<void> setDefaultAudioDevice(String name) async =>
       await _prefs.setString(_defaultAudioDeviceKey, name);
   static Future<void> setShowFForwardButton(bool value) async =>
@@ -22,6 +25,11 @@ class Prefs {
 
   static Future<void> setCustomTitlebar(bool value) async =>
       await _prefs.setBool(_customTitleBarKey, value);
+
+  static Future<void> setAutoCheckUpdates(bool value) async =>
+      await _prefs.setBool(_autoCheckUpdatesKey, value);
+  static Future<void> setSkippedVersion(String version) async =>
+      await _prefs.setString(_skippedVersionKey, version);
 
   // ------------ set ↑ ------------ get ↓ -----------------
   static Future<String?> getDefaultAudioDevice() async =>
@@ -35,6 +43,11 @@ class Prefs {
 
   static Future<bool?> getCustomTitlebar() async =>
       await _prefs.getBool(_customTitleBarKey);
+
+  static Future<bool?> getAutoCheckUpdates() async =>
+      await _prefs.getBool(_autoCheckUpdatesKey);
+  static Future<String?> getSkippedVersion() async =>
+      await _prefs.getString(_skippedVersionKey);
 }
 
 class Defaults {
@@ -44,4 +57,6 @@ class Defaults {
   static const fastForwardPitch = 1.4;
 
   static const customTitleBar = true;
+
+  static const autoCheckUpdates = true;
 }

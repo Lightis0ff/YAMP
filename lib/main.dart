@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:yamp/home.dart';
 import 'package:yamp/prefs.dart';
+import 'package:yamp/update.dart' as updater;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,15 +25,23 @@ void main(List<String> args) async {
   await windowManager.setResizable(false);
   await windowManager.setMaximizable(false);
 
+  updater.UpdateInfo? updateInfo;
+  final autoCheckUpdates =
+      (await Prefs.getAutoCheckUpdates()) ?? Defaults.autoCheckUpdates;
+  final skippedVersion = await Prefs.getSkippedVersion();
+  if (autoCheckUpdates) updateInfo = await updater.checkForUpdate();
+  if (updateInfo?.latestVersion == skippedVersion) updateInfo = null;
+
   String? openFilePath = Platform.isWindows ? args.firstOrNull : null;
 
-  runApp(MyApp(openFilePath: openFilePath));
+  runApp(MyApp(openFilePath, updateInfo));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.openFilePath});
+  const MyApp(this.openFilePath, this.updateInfo, {super.key});
 
   final String? openFilePath;
+  final updater.UpdateInfo? updateInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +52,9 @@ class MyApp extends StatelessWidget {
           waitDuration: Duration(milliseconds: 500),
           verticalOffset: 30,
         ),
+        textTheme: TextTheme(bodySmall: TextStyle(color: Color(0xFFAFAFAF))),
       ),
-      home: HomePage(openFilePath: openFilePath),
+      home: HomePage(openFilePath, updateInfo),
       debugShowCheckedModeBanner: false,
     );
   }
