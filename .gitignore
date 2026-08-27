@@ -49,3 +49,9 @@ app.*.map.json
 
 # My app certificate
 certificates/
+
+# Installer files
+installers/*
+!installers/images/
+!installers/builder.ps1
+!installers/inno.iss
