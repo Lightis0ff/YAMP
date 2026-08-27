@@ -37,6 +37,8 @@ void main(List<String> args) async {
   runApp(MyApp(openFilePath, updateInfo));
 }
 
+const mainColor = Color(0xFFA2845E);
+
 class MyApp extends StatelessWidget {
   const MyApp(this.openFilePath, this.updateInfo, {super.key});
 

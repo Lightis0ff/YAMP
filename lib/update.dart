@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:yamp/main.dart';
 import 'package:yamp/prefs.dart';
 import 'package:yamp/utils.dart';
 
@@ -304,15 +304,8 @@ Future<void> showUpdateModal(BuildContext context, UpdateInfo updateInfo) {
               mainAxisSize: .min,
               spacing: 3,
               children: [
-                Icon(
-                  Symbols.skip_next,
-                  fill: 1,
-                  color: CupertinoColors.systemBrown,
-                ),
-                Text(
-                  'Skip this version',
-                  style: TextStyle(color: CupertinoColors.systemBrown),
-                ),
+                Icon(Symbols.skip_next, fill: 1, color: mainColor),
+                Text('Skip this version', style: TextStyle(color: mainColor)),
               ],
             ),
           ),

@@ -9,6 +9,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:yamp/main.dart';
 import 'package:yamp/prefs.dart';
 import 'package:yamp/utils.dart';
 import 'package:yamp/update.dart' as updater;
@@ -304,7 +305,7 @@ class _SettingsTabState extends State<SettingsTab> {
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: CupertinoColors.systemBrown,
+                backgroundColor: mainColor,
                 padding: .symmetric(horizontal: 5),
                 visualDensity: VisualDensity(vertical: -4),
                 enabledMouseCursor: SystemMouseCursors.click,
@@ -376,9 +377,7 @@ class SettingsSwitch extends SettingsButton {
         shape: LinearBorder(
           start: LinearBorderEdge(),
           side: BorderSide(
-            color: value != defaultValue
-                ? CupertinoColors.systemBrown
-                : Colors.transparent,
+            color: value != defaultValue ? mainColor : Colors.transparent,
             width: 2,
           ),
         ),
@@ -406,7 +405,7 @@ class SettingsSwitch extends SettingsButton {
             child: CupertinoSwitch(
               value: value,
               onChanged: onChanged,
-              activeTrackColor: CupertinoColors.systemBrown,
+              activeTrackColor: mainColor,
             ),
           ),
         ],
@@ -451,9 +450,7 @@ class SettingsNumberSelector extends SettingsButton {
       decoration: BoxDecoration(
         border: .fromLTRB(
           left: BorderSide(
-            color: value != defaultValue
-                ? CupertinoColors.systemBrown
-                : Colors.transparent,
+            color: value != defaultValue ? mainColor : Colors.transparent,
             width: 2,
           ),
         ),
@@ -578,7 +575,7 @@ class SettingsElevatedButton extends SettingsButton {
                 : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: highlited
-                  ? CupertinoColors.systemBrown
+                  ? mainColor
                   : Theme.of(context).focusColor,
               shape: RoundedRectangleBorder(borderRadius: .circular(8)),
               visualDensity: VisualDensity(vertical: -2),
@@ -615,9 +612,7 @@ class SettingsDropdownButton extends SettingsButton {
       decoration: BoxDecoration(
         border: .fromLTRB(
           left: BorderSide(
-            color: value != defaultValue
-                ? CupertinoColors.systemBrown
-                : Colors.transparent,
+            color: value != defaultValue ? mainColor : Colors.transparent,
             width: 2,
           ),
         ),

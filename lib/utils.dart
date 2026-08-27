@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:crypto/crypto.dart';
+import 'package:yamp/main.dart';
 
 class CurrentMetadata {
   CurrentMetadata({required this.meta, required this.path});
@@ -103,7 +103,7 @@ OutlinedButton actionOutlineButton({
 }) => OutlinedButton(
   onPressed: onPressed,
   style: OutlinedButton.styleFrom(
-    side: BorderSide(color: CupertinoColors.systemBrown),
+    side: BorderSide(color: mainColor),
     visualDensity: VisualDensity(vertical: -2),
     padding: .symmetric(horizontal: 6),
     shape: RoundedRectangleBorder(borderRadius: .circular(8)),
@@ -120,7 +120,7 @@ ElevatedButton actionElevatedButton({
     ? ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: CupertinoColors.systemBrown,
+          backgroundColor: mainColor,
           visualDensity: VisualDensity(vertical: -2),
           padding: .symmetric(horizontal: 10),
           shape: RoundedRectangleBorder(borderRadius: .circular(8)),
@@ -133,7 +133,7 @@ ElevatedButton actionElevatedButton({
         icon: Icon(icon),
         iconAlignment: iconAlignment,
         style: ElevatedButton.styleFrom(
-          backgroundColor: CupertinoColors.systemBrown,
+          backgroundColor: mainColor,
           visualDensity: VisualDensity(vertical: -2),
           padding: .symmetric(horizontal: 10),
           shape: RoundedRectangleBorder(borderRadius: .circular(8)),
