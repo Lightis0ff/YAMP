@@ -29,7 +29,7 @@ CurrentMetadata? getCurrentMetadata(Playlist playlist) {
 
 AppBar titlebar(
   BuildContext context, {
-  String title = 'YAMP',
+  String? tab,
   List<Widget>? customButtons,
 }) => AppBar(
   leading: IgnorePointer(
@@ -38,7 +38,20 @@ AppBar titlebar(
       child: Image.asset('lib/assets/images/logo.png'),
     ),
   ),
-  title: IgnorePointer(child: Text(title, style: TextStyle(fontSize: 15))),
+  title: IgnorePointer(
+    child: RichText(
+      text: TextSpan(
+        style: TextStyle(fontSize: 15),
+        children: [
+          TextSpan(
+            style: TextStyle(fontFamily: 'Story Script'),
+            text: 'YAMP',
+          ),
+          if (tab != null) TextSpan(text: ' / $tab'),
+        ],
+      ),
+    ),
+  ),
   actions:
       [
             if (customButtons != null) ...(customButtons),

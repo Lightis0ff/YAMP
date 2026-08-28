@@ -115,6 +115,9 @@ flutter:
     - family: Pixel 12x10
       fonts:
         - asset: lib/assets/fonts/Pixel12x10.ttf
+    - family: Story Script
+      fonts:
+        - asset: lib/assets/fonts/StoryScript.ttf
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

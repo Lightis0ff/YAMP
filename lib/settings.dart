@@ -244,7 +244,7 @@ class _SettingsTabState extends State<SettingsTab> {
       appBar: customTitleBar
           ? titlebar(
               context,
-              title: 'YAMP / Settings',
+              tab: 'Settings',
               customButtons: [
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
