@@ -5,6 +5,7 @@
 _Play music the way it was supposed to be played._
 
 [![Available on Windows][windows_badge]](../../releases/)
+[![Made with Flutter][flutter_badge]][flutter_link]
 ![GitHub Repo stars](https://img.shields.io/github/stars/Lightis0ff/yamp?style=flat&color=gold)
 
 ---
@@ -33,4 +34,6 @@ Supported file types: `.mp3`, `.mp4`, `.flac`, `.ogg`, `.wav`
 
 [logo_light]: https://github.com/user-attachments/assets/c6b5935c-2782-42bb-af25-19a97d879618#gh-light-mode-only
 [logo_dark]: https://github.com/user-attachments/assets/90bd6c74-5a8f-4968-8ad0-d051a583e965#gh-dark-mode-only
-[windows_badge]: https://img.shields.io/badge/available_on-windows-blue
+[windows_badge]: https://img.shields.io/badge/available_on-Windows-blue
+[flutter_badge]: https://img.shields.io/badge/made_with-Flutter-%232BB6F6?logo=flutter
+[flutter_link]: https://flutter.dev/
