@@ -1,4 +1,5 @@
 # 💿 YAMP - The _fancy_ open-source music player
+
 ![YAMP][logo_light]
 ![YAMP][logo_dark]
 
@@ -10,16 +11,18 @@ _Play music the way it was supposed to be played._
 
 ---
 
-![Drop the disc](https://github.com/user-attachments/assets/07eef65c-cd9b-46e5-b4a4-545b338250a6 "Drop the disc")
-![Scrub it](https://github.com/user-attachments/assets/f18b823b-9b21-4d95-afb6-88cf015e5b61 "Scrub it")
-![All the controls are here](https://github.com/user-attachments/assets/6db6032f-ed20-469e-b3fe-f3923ce33984 "All the controls are here!")
+![Drop the disc](https://github.com/user-attachments/assets/07eef65c-cd9b-46e5-b4a4-545b338250a6 'Drop the disc')
+![Scrub it](https://github.com/user-attachments/assets/f18b823b-9b21-4d95-afb6-88cf015e5b61 'Scrub it')
+![All the controls are here](https://github.com/user-attachments/assets/6db6032f-ed20-469e-b3fe-f3923ce33984 'All the controls are here!')
 
 ## Installation
+
 1. Go to the [Releases](../../releases/) tab
-2. In the latest release `asset` tab select your architecture and download the installer
+2. In the latest release `asset` tab, select your architecture and download the installer
 3. Follow the installer's instructions
 
 ## Usage
+
 - Drag and drop a file into the window
 - or select a file by clicking the `📁` button.
 - Seek through the song by scrubbing the disc.
@@ -29,6 +32,7 @@ _Play music the way it was supposed to be played._
 Supported file types: `.mp3`, `.mp4`, `.flac`, `.ogg`, `.wav`
 
 ## Upcoming features
+
 - Playlists
 - Custom color themes from .json files
 
