@@ -108,10 +108,10 @@ flutter:
         - asset: lib/assets/fonts/LCD Calculator Display/lcd-calculator-display.otf
     - family: Pixel 12x10
       fonts:
-        - asset: lib/assets/fonts/Pixel12x10.ttf
+        - asset: lib/assets/fonts/Pixel 12x10/Pixel12x10.ttf
     - family: Story Script
       fonts:
-        - asset: lib/assets/fonts/StoryScript.ttf
+        - asset: lib/assets/fonts/Story Script/StoryScript.ttf
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
