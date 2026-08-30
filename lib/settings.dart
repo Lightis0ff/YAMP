@@ -180,6 +180,35 @@ class _SettingsTabState extends State<SettingsTab> {
           iconAlignment: .end,
         ),
         SettingsElevatedButton(
+          label: 'About YAMP',
+          onPressed: () => showAdaptiveAboutDialog(
+            context: context,
+            applicationName: 'YAMP',
+            applicationIcon: Image.asset(
+              'lib/assets/images/logo.png',
+              height: 36,
+              width: 36,
+            ),
+            applicationVersion: packageInfo?.version,
+            children: [
+              Text('YAMP - The fancy music player.'),
+              Text('Made by Lightis0ff:'),
+              InkWell(
+                onTap: () =>
+                    launchUrl(Uri.parse('https://github.com/Lightis0ff/')),
+                mouseCursor: SystemMouseCursors.click,
+                child: Text(
+                  'https://github.com/Lightis0ff/',
+                  style: TextStyle(color: mainColor),
+                ),
+              ),
+            ],
+          ),
+          buttonText: 'Show',
+          icon: Symbols.info,
+          iconAlignment: .end,
+        ),
+        SettingsElevatedButton(
           label: 'Reset all settings',
           description: 'This will close the window',
           onPressed: () async {
@@ -559,11 +588,11 @@ class SettingsElevatedButton extends SettingsButton {
                         context,
                         title: Text('Are you sure?'),
                         actions: [
-                          actionElevatedButton(
+                          actionOutlineButton(
                             onPressed: () => Navigator.of(context).pop(false),
                             text: 'Cancel',
                           ),
-                          actionOutlineButton(
+                          actionElevatedButton(
                             onPressed: () => Navigator.of(context).pop(true),
                             text: 'Ok',
                           ),
