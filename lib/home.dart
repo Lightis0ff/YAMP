@@ -546,7 +546,8 @@ class _HomePageState extends State<HomePage> {
                   child: Text(
                     volume.toString(),
                     style: TextStyle(
-                      fontFamily: 'Seven Segment',
+                      fontFamily: 'LCD Calculator Display',
+                      letterSpacing: 1.5,
                       color: Color(0xFFE0E0E0),
                     ),
                     textAlign: .end,
@@ -614,8 +615,9 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 durationString(pos),
                 style: TextStyle(
-                  fontFamily: 'Seven Segment',
-                  fontSize: 18,
+                  fontFamily: 'LCD Calculator Display',
+                  letterSpacing: 2,
+                  fontSize: 19,
                   color: Color(0xFF081819),
                   shadows: [
                     Shadow(

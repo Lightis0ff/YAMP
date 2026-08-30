@@ -103,15 +103,9 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Seven Segment
+    - family: LCD Calculator Display
       fonts:
-        - asset: lib/assets/fonts/SevenSegmentNumbers.otf
-    - family: DePixel
-      fonts:
-        - asset: lib/assets/fonts/DePixelHalbfett.ttf
-    - family: Pixellari
-      fonts:
-        - asset: lib/assets/fonts/Pixellari.ttf
+        - asset: lib/assets/fonts/LCD Calculator Display/lcd-calculator-display.otf
     - family: Pixel 12x10
       fonts:
         - asset: lib/assets/fonts/Pixel12x10.ttf
