@@ -25,8 +25,8 @@ _Play music the way it was supposed to be played._
 ### OS Support
 | OS Version | x64 | x86 | arm64 |
 | --- | --- | --- | --- |
-| Windows 11 | ✔️ | ❌ | ❔ |
-| Windows 10 | ✔️ | ❌ | ❔ |
+| Windows 11 | ✅ | ❌ | ❔ |
+| Windows 10 | ✅ | ❌ | ❔ |
 | Windows 8 and earlier | ❌ | ❌ | ❌ |
 
 ## Usage
