@@ -1,9 +1,17 @@
+param (
+    [string]$CertPath,
+    [string]$CertPassword,
+    [bool]$SignInstaller = $true
+)
+
+if (((-not $CertPassword) -or (-not $CertPath)) -and $SignInstaller) {
+    throw "Specify certificate path and password with -CertPath and -CertPassword or set -SignInstaller to `$false"
+}
+
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
-# ---------------------------------------------------------------------------
 # 1. Read the version from pubspec.yaml
-# ---------------------------------------------------------------------------
 $pubspecPath = Join-Path $root "..\pubspec.yaml"
 if (-not (Test-Path $pubspecPath)) {
     throw "pubspec.yaml not found at $pubspecPath"
@@ -21,9 +29,7 @@ $buildNumber = if ($parts.Count -gt 1) { $parts[1] } else { "0" }
 
 Write-Host "App version from pubspec.yaml: $appVersion (build $buildNumber)" -ForegroundColor Cyan
 
-# ---------------------------------------------------------------------------
 # 2. Build the Flutter Windows app
-# ---------------------------------------------------------------------------
 Write-Host "`nBuilding Flutter Windows app (release)..." -ForegroundColor Cyan
 flutter build windows --release
 if ($LASTEXITCODE -ne 0) { throw "flutter build windows failed (exit code $LASTEXITCODE)" }
@@ -37,9 +43,7 @@ if (-not (Test-Path $releaseDir)) {
 }
 Write-Host "Release build found at: $releaseDir" -ForegroundColor DarkGray
 
-# ---------------------------------------------------------------------------
 # 3. Locate the Inno Setup compiler (ISCC.exe)
-# ---------------------------------------------------------------------------
 $isccCandidates = @(
     "${env:ProgramFiles(x86)}\Inno Setup 7\ISCC.exe",
     "$env:ProgramFiles\Inno Setup 7\ISCC.exe",
@@ -54,9 +58,7 @@ if (-not $iscc) {
     throw "Could not find ISCC.exe. Install Inno Setup 7, or add its folder to PATH."
 }
 
-# ---------------------------------------------------------------------------
 # 4. Compile the installer, handing the version to it via /D defines
-# ---------------------------------------------------------------------------
 $issScript = Join-Path $root "inno.iss"
 if (-not (Test-Path $issScript)) { throw "inno.iss not found at $issScript" }
 
@@ -64,4 +66,16 @@ Write-Host "`nCompiling installer with ISCC..." -ForegroundColor Cyan
 & $iscc "/DMyAppVersion=$appVersion" "/DMyAppBuild=$buildNumber" "$issScript"
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed (exit code $LASTEXITCODE)" }
 
-Write-Host "`nDone. Installer built for version $appVersion." -ForegroundColor Green
+Write-Host "Installer built for version $appVersion." -ForegroundColor Cyan
+
+if (-not $SignInstaller) {
+    Write-Host "Done." -ForegroundColor Green
+    return;
+}
+
+# 5. Sign installer with a certificate
+Write-Host "Signing installer with a certificate..." -ForegroundColor Cyan
+& signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /f $CertPath /p $CertPassword ".\installers\YAMP_${appVersion}_Win_Setup.exe"
+if ($LASTEXITCODE -ne 0) { throw "Signing failed (exit code $LASTEXITCODE)" }
+
+Write-Host "Done." -ForegroundColor Green
