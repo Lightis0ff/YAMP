@@ -22,6 +22,13 @@ _Play music the way it was supposed to be played._
 2. In the latest release `asset` tab, select your architecture and download the installer
 3. Follow the installer's instructions
 
+### OS Support
+| OS Version | x64 | x86 | arm64 |
+| --- | --- | --- | --- |
+| Windows 11 | ✔️ | ❌ | ❔ |
+| Windows 10 | ✔️ | ❌ | ❔ |
+| Windows 8 and earlier | ❌ | ❌ | ❌ |
+
 ## Usage
 
 - Drag and drop a file into the window
