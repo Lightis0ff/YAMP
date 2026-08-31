@@ -31,7 +31,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=installers
-OutputBaseFilename="{#MyAppName}_{#MyAppVersion}_Setup"
+OutputBaseFilename="{#MyAppName}_{#MyAppVersion}_Win_Setup"
 SetupIconFile=installers\images\installerIcon.ico
 WizardSmallImageFile=installers\images\wizardSmallImage.png
 WizardImageFile=installers\images\wizardImage.png
@@ -57,6 +57,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
+Source: "installers\dll\*"; DestDir: "{app}"; Flags: ignoreversion; Check: IsX64Compatible
 Source: "build\windows\x64\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\windows\x64\runner\Release\desktop_drop_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion

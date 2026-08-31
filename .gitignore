@@ -53,5 +53,6 @@ certificates/
 # Installer files
 installers/*
 !installers/images/
+!installers/dll/
 !installers/builder.ps1
 !installers/inno.iss
