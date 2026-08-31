@@ -49,5 +49,5 @@ Supported file types: `.mp3`, `.mp4`, `.flac`, `.ogg`, `.wav`
 [windows_badge]: https://img.shields.io/badge/available_on-Windows-blue
 [flutter_badge]: https://img.shields.io/badge/made_with-Flutter-%232BB6F6?logo=flutter
 [flutter_link]: https://flutter.dev/
-[license_badge]: https://img.shields.io/github/license/Lightis0ff/yamp
-[stars_badge]: https://img.shields.io/github/stars/Lightis0ff/yamp?style=flat&color=gold
+[license_badge]: https://img.shields.io/github/license/Lightis0ff/YAMP
+[stars_badge]: https://img.shields.io/github/stars/Lightis0ff/YAMP?style=flat&color=gold
