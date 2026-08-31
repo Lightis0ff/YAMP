@@ -7,8 +7,8 @@ _Play music the way it was supposed to be played._
 
 [![Available on Windows][windows_badge]](../../releases/)
 [![Made with Flutter][flutter_badge]][flutter_link]
-![License][license_badge]
-![Repo stars][stars_badge]
+[![License][license_badge]](../../?tab=GPL-3.0-1-ov-file)
+[![Repo stars][stars_badge]](../../stargazers)
 
 ---
 
